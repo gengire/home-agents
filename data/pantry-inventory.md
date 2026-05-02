@@ -1,8 +1,8 @@
 # Pantry & Fridge Inventory
-**Last updated:** April 30, 2026
+**Last updated:** May 2, 2026
 
 **Proteins:**
-- 
+- Tilapia fillets (frozen — use this week)
 
 **Vegetables:**
 - 
