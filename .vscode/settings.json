@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "npm install": true,
+        "npx tailwindcss": true,
+        "node_modules\\.bin\\tailwindcss": true,
+        "&": true,
+        "Set-Content": true,
+        "npm run dev": true,
+        "npm run build": true,
+        "git push": true
+    }
+}

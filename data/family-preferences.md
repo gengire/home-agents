@@ -21,8 +21,8 @@ Chris, wife, and two teenage daughters (4 people total). Both adults work full t
 
 | Person | Height | Notes |
 |--------|--------|-------|
-| Chris | 6'1", 220 lbs | Gradual weight loss goal. Wants ultra-spicy food. Needs to feel satisfied, not just full. |
-| Wife | 5'10" | Gradual weight loss goal. Comfortable with mild-medium heat. |
+| Chris | tall, gradual weight loss goal | Gradual weight loss goal. Wants ultra-spicy food. Needs to feel satisfied, not just full. |
+| Wife | also working toward gradual weight loss | Gradual weight loss goal. Comfortable with mild-medium heat. |
 | Daughter 1 | Teen | No restrictions, slim, treat as adult. |
 | Daughter 2 | Teen | No restrictions, slim, treat as adult. |
 

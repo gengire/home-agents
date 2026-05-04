@@ -41,9 +41,9 @@ Design for **3–4 cooking sessions** covering 7 dinners and lunch leftovers:
 
 ## Family Profile
 
-**Chris** — 6'1", 220 lbs, gradual weight loss goal. Loves ultra-spicy food. Needs to feel satisfied at the end of a meal. Benefits from high-satiety, high-fiber, moderate-calorie meals.
+**Chris** — tall, gradual weight loss goal. Loves ultra-spicy food. Needs to feel satisfied at the end of a meal. Benefits from high-satiety, high-fiber, moderate-calorie meals.
 
-**Wife** — 5'10", also aiming for gradual healthy weight loss. Same Pritikin goals.
+**Wife** — also working toward gradual weight loss. Same Pritikin goals.
 
 **Daughters (2, teenage)** — Slim, no dietary restrictions, no special accommodations. Treat exactly as adults for all meal planning.
 
