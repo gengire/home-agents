@@ -66,6 +66,51 @@ export function appendCookLogEntry(markdown, { date, recipeName, category, notes
   return lines.join('\n')
 }
 
+/** Helper: identify data rows (skip header, separator, placeholder) */
+function isDataRow(line) {
+  if (!line.startsWith('|')) return false
+  if (line.includes('Date') && line.includes('Recipe')) return false
+  if (/^\|[-| ]+\|$/.test(line.trim())) return false
+  if (line.includes('Add first entry') || line.includes('— | —')) return false
+  return true
+}
+
+/**
+ * Replace the nth data row (0-indexed) in the cook-log table.
+ * Returns the updated markdown.
+ */
+export function updateCookLogEntry(markdown, rowIndex, { date, recipeName, category, notes = '' }) {
+  const lines = markdown.split('\n')
+  let dataRowCount = 0
+  for (let i = 0; i < lines.length; i++) {
+    if (!isDataRow(lines[i])) continue
+    if (dataRowCount === rowIndex) {
+      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} |`
+      return lines.join('\n')
+    }
+    dataRowCount++
+  }
+  return markdown
+}
+
+/**
+ * Delete the nth data row (0-indexed) from the cook-log table.
+ * Returns the updated markdown.
+ */
+export function deleteCookLogEntry(markdown, rowIndex) {
+  const lines = markdown.split('\n')
+  let dataRowCount = 0
+  for (let i = 0; i < lines.length; i++) {
+    if (!isDataRow(lines[i])) continue
+    if (dataRowCount === rowIndex) {
+      lines.splice(i, 1)
+      return lines.join('\n')
+    }
+    dataRowCount++
+  }
+  return markdown
+}
+
 export const CATEGORIES = [
   { code: 'IND-L', label: 'Indian — Legume/Dal', color: 'orange' },
   { code: 'IND-P', label: 'Indian — Protein', color: 'orange' },
