@@ -19,6 +19,10 @@ function tomorrowDayName() {
   return DAY_NAMES[d.getDay()]
 }
 
+function todayISO() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 function findDayPlan(days, dayName) {
   return days.find(d => d.heading.toLowerCase().includes(dayName.toLowerCase())) || null
 }
@@ -95,6 +99,7 @@ export default function Dashboard() {
   const [todayDinner, setTodayDinner] = useState(null)
   const [tomorrowDinner, setTomorrowDinner] = useState(null)
   const [todayIsNew, setTodayIsNew] = useState(false)
+  const [todayLoggedMeal, setTodayLoggedMeal] = useState(null)
   const [coolingDown, setCoolingDown] = useState([])
   const [maintenance, setMaintenance] = useState(null)
   const [pantryUpdated, setPantryUpdated] = useState('')
@@ -124,6 +129,8 @@ export default function Dashboard() {
         const entries = parseCookLog(cookFile.content)
         const recent = getRecentCategories(entries, 8)
         setCoolingDown([...recent])
+        const todayEntry = entries.find(e => e.date === todayISO())
+        setTodayLoggedMeal(todayEntry ? todayEntry.recipeName : null)
       }
 
       if (maintFile) {
@@ -165,13 +172,37 @@ export default function Dashboard() {
         <div className="flex items-center gap-2 mb-1">
           <CalendarDays size={16} className="text-green-600" />
           <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">Tonight</span>
-          {todayIsNew && <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">🍳 Cook tonight</span>}
+          {todayIsNew && !todayLoggedMeal && (
+            <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">🍳 Cook tonight</span>
+          )}
         </div>
-        <p className="text-base font-semibold text-gray-800 leading-snug">
-          {todayDinner || <span className="text-gray-400 font-normal italic">No meal plan for today</span>}
-        </p>
+
+        {todayLoggedMeal ? (
+          <>
+            <div className="flex items-start gap-2">
+              <span className="text-base">✅</span>
+              <p className="text-base font-semibold text-gray-800 leading-snug">{todayLoggedMeal}</p>
+            </div>
+            {todayDinner && todayDinner.toLowerCase() !== todayLoggedMeal.toLowerCase() && (
+              <p className="text-xs text-gray-400 mt-1">Was planned: {todayDinner}</p>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="flex items-start gap-2">
+              <span className="text-base">📋</span>
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-gray-800 leading-snug">
+                  {todayDinner || <span className="text-gray-400 font-normal italic">No meal plan for today</span>}
+                </p>
+                {todayDinner && <p className="text-xs text-gray-400 mt-0.5">Planned</p>}
+              </div>
+            </div>
+          </>
+        )}
+
         {tomorrowDinner && (
-          <p className="text-xs text-gray-400 mt-1">Tomorrow: {tomorrowDinner}</p>
+          <p className="text-xs text-gray-400 mt-2">Tomorrow: {tomorrowDinner}</p>
         )}
       </div>
 
