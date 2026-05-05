@@ -1,4 +1,23 @@
 /**
+ * Find the line range of the Log table (the one with Date/Recipe/Category/Notes headers).
+ * Returns { headerIdx, end } where lines[headerIdx..end-1] is the full table.
+ * end is the first line index after the table (non-| line).
+ */
+function findLogTableRange(lines) {
+  let headerIdx = -1
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('|') && lines[i].includes('Date') && lines[i].includes('Recipe')) {
+      headerIdx = i
+      break
+    }
+  }
+  if (headerIdx === -1) return { headerIdx: -1, end: -1 }
+  let end = headerIdx + 1
+  while (end < lines.length && lines[end].startsWith('|')) end++
+  return { headerIdx, end }
+}
+
+/**
  * Parse cook-log.md markdown table into an array of entry objects.
  * Format:
  *   | Date | Recipe Name | Category | Notes |
@@ -7,10 +26,12 @@
  */
 export function parseCookLog(markdown) {
   const lines = markdown.split('\n')
+  const { headerIdx, end } = findLogTableRange(lines)
+  if (headerIdx === -1) return []
   const entries = []
 
-  for (const line of lines) {
-    if (!line.startsWith('|')) continue
+  for (let i = headerIdx; i < end; i++) {
+    const line = lines[i]
     // Skip header and separator rows
     if (line.includes('Date') && line.includes('Recipe')) continue
     if (/^\|[-| ]+\|$/.test(line.trim())) continue
@@ -18,7 +39,7 @@ export function parseCookLog(markdown) {
     const cols = line
       .split('|')
       .map(c => c.trim())
-      .filter((_, i, arr) => i > 0 && i < arr.length - 1) // drop first/last empty
+      .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1)
 
     if (cols.length < 3) continue
     const [date, recipeName, category, notes = ''] = cols
@@ -31,36 +52,32 @@ export function parseCookLog(markdown) {
 }
 
 /**
- * Append a new entry row to the cook-log markdown string.
+ * Append a new entry row to the Log table only.
  * Returns the updated markdown.
  */
 export function appendCookLogEntry(markdown, { date, recipeName, category, notes = '' }) {
   const newRow = `| ${date} | ${recipeName} | ${category} | ${notes} |`
-  // Find the last table row and insert after it
   const lines = markdown.split('\n')
-  // Find the last line that starts with | and is a data row
-  let lastTableLine = -1
-  for (let i = lines.length - 1; i >= 0; i--) {
-    if (lines[i].startsWith('|') && !/^\|[-| ]+\|$/.test(lines[i].trim())) {
-      // Skip the placeholder row
-      if (lines[i].includes('Add first entry')) {
-        lastTableLine = i
-        break
-      }
-      lastTableLine = i
-      break
-    }
-  }
+  const { headerIdx, end } = findLogTableRange(lines)
 
-  if (lastTableLine === -1) {
+  if (headerIdx === -1) {
     return markdown + '\n' + newRow
   }
 
-  // Replace placeholder row OR insert after last real row
-  if (lines[lastTableLine].includes('Add first entry') || lines[lastTableLine].includes('— | —')) {
-    lines[lastTableLine] = newRow
+  // Find the last data row within the Log table range (search backwards from end)
+  let lastDataLine = -1
+  for (let i = end - 1; i > headerIdx; i--) {
+    if (isDataRow(lines[i])) { lastDataLine = i; break }
+  }
+
+  if (lastDataLine === -1) {
+    // No data rows yet — insert after the separator line (headerIdx + 1)
+    const sepIdx = headerIdx + 1
+    lines.splice(sepIdx + 1, 0, newRow)
+  } else if (lines[lastDataLine].includes('Add first entry') || lines[lastDataLine].includes('— | —')) {
+    lines[lastDataLine] = newRow
   } else {
-    lines.splice(lastTableLine + 1, 0, newRow)
+    lines.splice(lastDataLine + 1, 0, newRow)
   }
 
   return lines.join('\n')
@@ -81,8 +98,9 @@ function isDataRow(line) {
  */
 export function updateCookLogEntry(markdown, rowIndex, { date, recipeName, category, notes = '' }) {
   const lines = markdown.split('\n')
+  const { headerIdx, end } = findLogTableRange(lines)
   let dataRowCount = 0
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = headerIdx; i < end; i++) {
     if (!isDataRow(lines[i])) continue
     if (dataRowCount === rowIndex) {
       lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} |`
@@ -99,8 +117,9 @@ export function updateCookLogEntry(markdown, rowIndex, { date, recipeName, categ
  */
 export function deleteCookLogEntry(markdown, rowIndex) {
   const lines = markdown.split('\n')
+  const { headerIdx, end } = findLogTableRange(lines)
   let dataRowCount = 0
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = headerIdx; i < end; i++) {
     if (!isDataRow(lines[i])) continue
     if (dataRowCount === rowIndex) {
       lines.splice(i, 1)

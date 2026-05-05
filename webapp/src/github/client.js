@@ -23,7 +23,9 @@ export async function getFile(repo, path) {
     repo: repoName,
     path,
   })
-  const content = atob(response.data.content.replace(/\n/g, ''))
+  const base64 = response.data.content.replace(/\n/g, '')
+  const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
+  const content = new TextDecoder('utf-8').decode(bytes)
   return { content, sha: response.data.sha }
 }
 
