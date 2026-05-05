@@ -159,12 +159,17 @@ export default function Maintenance() {
         </div>
         <div className="py-2.5">
           <label className="text-xs font-medium text-gray-600 mb-1 block">Notes</label>
-          <input
-            type="text"
+          <textarea
+            ref={el => { if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px" } }}
             value={data.hvac.notes}
-            onChange={e => set("hvac.notes", e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            onChange={e => {
+              set("hvac.notes", e.target.value)
+              e.target.style.height = "auto"
+              e.target.style.height = e.target.scrollHeight + "px"
+            }}
+            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none overflow-hidden"
             placeholder="Any notes…"
+            rows={1}
           />
         </div>
       </SectionCard>

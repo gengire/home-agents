@@ -48,7 +48,8 @@ export default function PantryManager() {
     setParsed(prev => {
       const next = structuredClone(prev)
       const item = next.sections[sectionIdx].items[itemIdx]
-      next.sections[sectionIdx].items[itemIdx] = item.startsWith("⬜ ") ? item.slice(3) : "⬜ " + item
+      const prefix = "⬜ "
+      next.sections[sectionIdx].items[itemIdx] = item.startsWith(prefix) ? item.slice(prefix.length) : prefix + item
       return next
     })
     setDirty(true)
@@ -152,8 +153,9 @@ export default function PantryManager() {
               <li className="px-4 py-3 text-xs text-gray-400 italic">Nothing listed</li>
             )}
             {section.items.map((item, iIdx) => {
-              const isOut = item.startsWith("⬜ ")
-              const label = isOut ? item.slice(3) : item
+              const prefix = "⬜ "
+              const isOut = item.startsWith(prefix)
+              const label = isOut ? item.slice(prefix.length) : item
               return (
                 <li
                   key={iIdx}
