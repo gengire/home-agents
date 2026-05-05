@@ -18,6 +18,7 @@ HomeChef will append rows in the format below.
 | Date | Recipe Name | Category | Notes |
 |------|-------------|----------|-------|
 | 2026-05-04 | Saag Chicken | IND-P | |
+| 2026-05-05 | Saag Chicken | IND-P | Leftovers |
 
 ---
 
