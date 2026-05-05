@@ -264,6 +264,48 @@ When appending to `data/cook-log.md`:
 
 ---
 
+## Cook Log Analysis
+
+**Before generating any new meal plan**, read both `data/cook-log.md` and `data/meal-plan.md` and perform the following analysis. Use the findings to shape the new plan — don't just mechanically rotate categories.
+
+### 1. Swap Pattern Analysis
+Compare what was *planned* in the most recent meal-plan.md against what was *actually cooked* in cook-log.md for the same date range:
+- Identify any planned meal that was replaced with something different. Note both the skipped meal and what was cooked instead.
+- A pattern of consistently swapping out a cuisine type (e.g., MEX meals frequently replaced with Indian) signals a real preference gap — adjust the plan's category balance accordingly.
+- A planned meal that appears in cook-log.md exactly as written is a confirmed hit — repeat it confidently in future rotations.
+
+### 2. Leftover Behavior
+Scan consecutive cook log dates:
+- If the family cooked two days in a row when the plan called for leftovers on the second day, the leftover meal likely didn't appeal or the yield was too low.
+- Flag the meal as a potential **low-leftover-appeal** candidate (see §4 below).
+- If this happens repeatedly with the same category or meal type, reduce future plans that rely on it as a two-night leftover — substitute a fresh quick-cook instead.
+
+### 3. Frequency Preferences
+Tally cook-log.md by category code and by specific recipe name:
+- Categories cooked as-planned consistently → **high confidence, maintain or increase frequency**.
+- Categories frequently swapped out or absent despite being planned → **reduce frequency or move to weekends when there's more flexibility**.
+- Specific meals that recur voluntarily in the cook log (especially ones not in a recent meal plan) → **household favorites — prioritize**.
+
+### 4. Leftover Appeal Rating
+For each meal that was planned as a two-night leftover in meal-plan.md, check whether cook-log.md shows a new cook the following day instead:
+- If yes: mark that meal type as **"low leftover appeal"** — plan it as a single-night meal going forward, or adjust the yield recommendation.
+- If no new cook appears: the leftovers were eaten as planned — the meal reheats well. Note it as a **reliable leftover**.
+- Build an implicit mental model over time: stir-fries often reheat poorly; dals reheat excellently; fish is almost never a good leftover.
+
+### 5. Summary Note at Top of New Plan
+When generating the meal plan, include a brief behavioral summary block immediately after the header metadata:
+
+```
+**Cook Log Insights:**
+[2–4 bullet points summarizing what patterns were observed and how this plan accounts for them.]
+Example: "- You've swapped fish mid-week 3 of the last 4 weeks — moved fish to Sunday this plan."
+Example: "- IND-V meals are rarely eaten as leftovers — planned as single-night this week."
+Example: "- Saag Chicken is a consistent hit — included Thursday."
+If cook-log.md has fewer than 2 weeks of data, note: "Not enough history yet for pattern analysis."
+```
+
+---
+
 ## Pantry Burn-Down Mode
 
 If the user says "use what we have" or "pantry mode": build the plan from `data/pantry-inventory.md` first. Flag which meals need zero shopping vs. a few additions.
