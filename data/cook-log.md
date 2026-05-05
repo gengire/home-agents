@@ -1,7 +1,7 @@
-# Cook Log Ã¢ÂÂ Meal History
+# Cook Log — Meal History
 **Purpose:** Permanent record of meals actually cooked. HomeChef reads this before every plan to enforce category rotation (no repeat within 8 days).
 **Rule:** Append only. Never delete or overwrite rows.
-**Last updated:** Ã¢ÂÂ
+**Last updated:** 2026-05-04
 
 ---
 
@@ -17,16 +17,16 @@ HomeChef will append rows in the format below.
 
 | Date | Recipe Name | Category | Notes |
 |------|-------------|----------|-------|
-| Ã¢ÂÂ | Ã¢ÂÂ | Ã¢ÂÂ | Add first entry after your first cook session |
+| 2026-05-04 | Saag Chicken | IND-P | |
 
 ---
 
 ## Category Codes (Reference)
 | Code | Category |
 |------|----------|
-| 2026-05-04 | Saag Chicken | IND-P |  |
-| `IND-P` | Indian Ã¢ÂÂ Protein |
-| `IND-V` | Indian Ã¢ÂÂ Vegetable |
+| `IND-L` | Indian — Legume/Dal |
+| `IND-P` | Indian — Protein |
+| `IND-V` | Indian — Vegetable |
 | `MED` | Mediterranean |
 | `MEX` | Mexican/Latin |
 | `ASIA` | Asian |
@@ -34,4 +34,3 @@ HomeChef will append rows in the format below.
 | `FISH` | Fish/Seafood |
 | `AMER` | American Comfort |
 | `DESS` | Dessert |
-| 2026-05-04 | Saag Chicken | IND-L |  |
