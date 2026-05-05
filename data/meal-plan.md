@@ -4,7 +4,7 @@
 **For week of:** May 3–9, 2026
 
 > This file is maintained by **HomeChef** and overwritten each time a new plan is generated.
-> Cooking history lives in `.github/agents/cook-log.md` — append-only, never overwritten.
+> Cooking history lives in `data/cook-log.md` — append-only, never overwritten.
 
 ---
 

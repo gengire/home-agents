@@ -35,7 +35,7 @@ You are helping Chris run his household smoothly. Both adults work full time. Th
 ## Key Files
 | File | Purpose |
 |------|---------|
-| `family-prefs.md` | Full household preferences, profiles, cuisine favorites |
+| `data/family-preferences.md` | Full household preferences, profiles, cuisine favorites |
 | `pantry-inventory.md` | Current pantry — check before every meal plan |
 | `meal-plan.md` | Current week's plan (overwritten each week) |
 | `cook-log.md` | Permanent history of meals cooked + categories — HomeChef reads this for rotation |
