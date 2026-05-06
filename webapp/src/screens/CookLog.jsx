@@ -37,6 +37,7 @@ export default function CookLog() {
   const [category, setCategory] = useState("IND-L")
   const [notes, setNotes] = useState("")
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [ateOut, setAteOut] = useState(false)
 
   // Edit / delete state
   const [editingIndex, setEditingIndex] = useState(null)
@@ -83,6 +84,7 @@ export default function CookLog() {
     setDate(todayISO())
     setCategory("IND-L")
     setEditingIndex(null)
+    setAteOut(false)
   }
 
   async function handleRecipeSelect(name) {
@@ -101,10 +103,15 @@ export default function CookLog() {
 
   async function handleLog(e) {
     e.preventDefault()
-    if (!recipeName.trim()) return
+    if (!ateOut && !recipeName.trim()) return
     setSaving(true)
     try {
-      const entry = { date, recipeName: recipeName.trim(), category, notes: notes.trim() }
+      const rawNotes = notes.trim()
+      const notesValue = ateOut
+        ? rawNotes ? `Ate Out — ${rawNotes}` : "Ate Out"
+        : rawNotes
+      const mealName = ateOut ? (recipeName.trim() || "Ate Out") : recipeName.trim()
+      const entry = { date, recipeName: mealName, category, notes: notesValue }
       const updated = editingIndex !== null
         ? updateCookLogEntry(rawMarkdown, editingIndex, entry)
         : appendCookLogEntry(rawMarkdown, entry)
@@ -126,13 +133,13 @@ export default function CookLog() {
   }
 
   function handleEdit(entryIndex) {
-    // entryIndex is the position in the reversed recentEntries array;
-    // we need the original entries array index. We'll pass the original index directly.
     const e = entries[entryIndex]
+    const isAteOut = e.notes.startsWith("Ate Out")
     setDate(e.date)
     setRecipeName(e.recipeName)
     setCategory(e.category)
-    setNotes(e.notes)
+    setNotes(isAteOut ? e.notes.replace(/^Ate Out(?:\s*—\s*)?/, "") : e.notes)
+    setAteOut(isAteOut)
     setEditingIndex(entryIndex)
     setDeleteConfirm(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -183,15 +190,28 @@ export default function CookLog() {
           <h3 className="text-sm font-semibold text-gray-800">
             {editingIndex !== null ? "Edit entry" : "Log a meal"}
           </h3>
-          {editingIndex !== null && (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => { resetForm(); setDeleteConfirm(null) }}
-              className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+              onClick={() => { setAteOut(v => !v); setRecipeName(""); setShowSuggestions(false) }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
+                ateOut
+                  ? "bg-amber-100 text-amber-700 border-amber-300"
+                  : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
+              }`}
             >
-              <X size={13} /> Cancel
+              🍽️ {ateOut ? "Ate Out" : "Ate Out?"}
             </button>
-          )}
+            {editingIndex !== null && (
+              <button
+                type="button"
+                onClick={() => { resetForm(); setDeleteConfirm(null) }}
+                className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+              >
+                <X size={13} /> Cancel
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -205,7 +225,7 @@ export default function CookLog() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Category</label>
+            <label className="block text-xs text-gray-500 mb-1">{ateOut ? "Cuisine Type" : "Category"}</label>
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
@@ -218,6 +238,18 @@ export default function CookLog() {
           </div>
         </div>
 
+        {ateOut ? (
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Cuisine / Restaurant (optional)</label>
+            <input
+              type="text"
+              value={recipeName}
+              onChange={e => setRecipeName(e.target.value)}
+              placeholder="e.g. Sushi Palace, Italian, Tacos"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+            />
+          </div>
+        ) : (
         <div className="relative">
           <label className="block text-xs text-gray-500 mb-1">Recipe name</label>
           <input
@@ -248,6 +280,7 @@ export default function CookLog() {
             </p>
           )}
         </div>
+        )}
 
         <div>
           <label className="block text-xs text-gray-500 mb-1">Notes (optional)</label>
@@ -262,11 +295,13 @@ export default function CookLog() {
 
         <button
           type="submit"
-          disabled={saving || !recipeName.trim()}
-          className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors"
+          disabled={saving || (!ateOut && !recipeName.trim())}
+          className={`w-full flex items-center justify-center gap-2 disabled:opacity-50 text-white font-semibold rounded-xl py-2.5 text-sm transition-colors ${
+            ateOut ? "bg-amber-500 hover:bg-amber-600" : "bg-green-600 hover:bg-green-700"
+          }`}
         >
           <PlusCircle size={16} />
-          {saving ? (editingIndex !== null ? "Saving…" : "Logging…") : (editingIndex !== null ? "Save Changes" : "Log It")}
+          {saving ? (editingIndex !== null ? "Saving…" : "Logging…") : (editingIndex !== null ? "Save Changes" : (ateOut ? "Log Ate Out" : "Log It"))}
         </button>
       </form>
 
@@ -322,7 +357,10 @@ export default function CookLog() {
                   }`}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{entry.recipeName}</p>
+                    <div className="flex items-center gap-1.5">
+                      {entry.notes.startsWith("Ate Out") && <span title="Ate out">🍽️</span>}
+                      <p className="text-sm font-medium text-gray-900 truncate">{entry.recipeName}</p>
+                    </div>
                     {entry.notes && (
                       <p className="text-xs text-gray-400 mt-0.5 truncate">{entry.notes}</p>
                     )}
