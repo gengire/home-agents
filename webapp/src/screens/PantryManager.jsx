@@ -8,6 +8,7 @@ import Toast from "../components/Toast"
 const BarcodeScanner = lazy(() => import("../components/BarcodeScanner"))
 
 const PANTRY_PATH = "data/pantry-inventory.md"
+const CACHE_PATH = "data/barcode-cache.json"
 
 async function commitPantry(repo, content, sha) {
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
@@ -27,14 +28,25 @@ export default function PantryManager() {
   const [newItems, setNewItems] = useState({})
   const [scanning, setScanning] = useState(false)
   const pressTimer = useRef(null)
+  const [cacheData, setCacheData] = useState({})
+  const [cacheSha, setCacheSha] = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const { content, sha: fileSha } = await getFile(repo, PANTRY_PATH)
-      setParsed(parsePantry(content))
-      setSha(fileSha)
+      const [pantryResult, cacheResult] = await Promise.all([
+        getFile(repo, PANTRY_PATH),
+        getFile(repo, CACHE_PATH).catch(() => null),
+      ])
+      setParsed(parsePantry(pantryResult.content))
+      setSha(pantryResult.sha)
       setDirty(false)
+      if (cacheResult) {
+        try {
+          setCacheData(JSON.parse(cacheResult.content))
+          setCacheSha(cacheResult.sha)
+        } catch { /* ignore malformed cache */ }
+      }
     } catch {
       setToast({ message: "Failed to load pantry from GitHub.", type: "error" })
     } finally {
@@ -106,6 +118,18 @@ export default function PantryManager() {
     })
     setDirty(true)
     setToast({ message: `✅ "${item}" added to ${section}`, type: 'success' })
+  }
+
+  async function handleCacheUpdate(barcode, name) {
+    const updated = { ...cacheData, [barcode]: name }
+    setCacheData(updated)
+    try {
+      await updateFile(repo, CACHE_PATH, JSON.stringify(updated, null, 2), cacheSha, `Barcode cache: ${barcode} → ${name}`)
+      const { sha: newSha } = await getFile(repo, CACHE_PATH)
+      setCacheSha(newSha)
+    } catch {
+      // Non-critical — item was already added to pantry
+    }
   }
 
   function startPress(sectionIdx, itemIdx) {
@@ -226,6 +250,8 @@ export default function PantryManager() {
             onAdd={handleScannedItem}
             onClose={() => setScanning(false)}
             knownSections={parsed.sections.map(s => s.name)}
+            cacheData={cacheData}
+            onCacheUpdate={handleCacheUpdate}
           />
         </Suspense>
       )}

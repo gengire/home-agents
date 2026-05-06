@@ -36,8 +36,10 @@ async function lookupBarcode(barcode) {
  *   onAdd({ item, section }) — called when user confirms adding the scanned product
  *   onClose() — dismiss the scanner
  *   knownSections: string[] — list of available section names for the user to pick
+ *   cacheData: object — barcode→name map to check before calling API
+ *   onCacheUpdate(barcode, name) — called when user manually enters a name for an unknown barcode
  */
-export default function BarcodeScanner({ onAdd, onClose, knownSections = [] }) {
+export default function BarcodeScanner({ onAdd, onClose, knownSections = [], cacheData = {}, onCacheUpdate }) {
   const videoRef = useRef(null)
   const readerRef = useRef(null)
   const [scanning, setScanning] = useState(true)
@@ -47,6 +49,8 @@ export default function BarcodeScanner({ onAdd, onClose, knownSections = [] }) {
   const [editedName, setEditedName] = useState('')
   const [selectedSection, setSelectedSection] = useState('')
   const [cameraError, setCameraError] = useState(null)
+  const [scannedBarcode, setScannedBarcode] = useState(null)
+  const [isManualEntry, setIsManualEntry] = useState(false)
 
   // Start scanner
   useEffect(() => {
@@ -60,10 +64,25 @@ export default function BarcodeScanner({ onAdd, onClose, knownSections = [] }) {
       // Got a barcode — stop scanning, look up
       controls?.stop()
       setScanning(false)
+      const barcode = result.getText()
+      setScannedBarcode(barcode)
+
+      // Check local cache first
+      if (cacheData[barcode]) {
+        const cachedName = cacheData[barcode]
+        const suggestedSection = guessSection(cachedName)
+        setProduct({ name: cachedName, categories: '', barcode })
+        setEditedName(cachedName)
+        setSelectedSection(knownSections.includes(suggestedSection) ? suggestedSection : (knownSections[0] || 'Other'))
+        setIsManualEntry(false)
+        return
+      }
+
       setLoading(true)
       setError(null)
+      setIsManualEntry(false)
       try {
-        const data = await lookupBarcode(result.getText())
+        const data = await lookupBarcode(barcode)
         const suggestedSection = guessSection(data.name, data.categories)
         setProduct(data)
         setEditedName(data.name)
@@ -76,6 +95,7 @@ export default function BarcodeScanner({ onAdd, onClose, knownSections = [] }) {
           : 'Could not look up barcode. Check connection.')
         setEditedName('')
         setSelectedSection(knownSections[0] || 'Other')
+        setIsManualEntry(true)
       } finally {
         setLoading(false)
       }
@@ -93,11 +113,16 @@ export default function BarcodeScanner({ onAdd, onClose, knownSections = [] }) {
     setEditedName('')
     setSelectedSection('')
     setScanning(true)
+    setScannedBarcode(null)
+    setIsManualEntry(false)
   }
 
   function handleConfirm() {
     const name = editedName.trim()
     if (!name) return
+    if (isManualEntry && scannedBarcode && onCacheUpdate) {
+      onCacheUpdate(scannedBarcode, name)
+    }
     onAdd({ item: name, section: selectedSection })
   }
 
