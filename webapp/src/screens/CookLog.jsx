@@ -49,12 +49,17 @@ export default function CookLog() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [ateOut, setAteOut] = useState(false)
 
+  // Form rating state (log + edit)
+  const [formRating, setFormRating] = useState(0)
+  const [formMakeAgain, setFormMakeAgain] = useState(null)
+  const [formNote, setFormNote] = useState("")
+
   // Edit / delete state
   const [editingIndex, setEditingIndex] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [fetchingCategory, setFetchingCategory] = useState(false)
 
-  // Rating state
+  // History card rating state
   const [pendingRatings, setPendingRatings] = useState({})
   const [savingRating, setSavingRating] = useState(null)
 
@@ -99,6 +104,9 @@ export default function CookLog() {
     setCategory("IND-L")
     setEditingIndex(null)
     setAteOut(false)
+    setFormRating(0)
+    setFormMakeAgain(null)
+    setFormNote("")
   }
 
   async function handleRecipeSelect(name) {
@@ -125,11 +133,13 @@ export default function CookLog() {
         ? rawNotes ? `Ate Out — ${rawNotes}` : "Ate Out"
         : rawNotes
       const mealName = ateOut ? (recipeName.trim() || "Ate Out") : recipeName.trim()
-      const existingEntry = editingIndex !== null ? entries[editingIndex] : null
+      const formFeedback = formMakeAgain
+        ? (formNote.trim() ? `${formMakeAgain} — ${formNote.trim()}` : formMakeAgain)
+        : formNote.trim()
       const entry = {
         date, recipeName: mealName, category, notes: notesValue,
-        rating: existingEntry?.rating ?? '',
-        feedback: existingEntry?.feedback ?? '',
+        rating: formRating || '',
+        feedback: formFeedback,
       }
       const updated = editingIndex !== null
         ? updateCookLogEntry(rawMarkdown, editingIndex, entry)
@@ -154,11 +164,15 @@ export default function CookLog() {
   function handleEdit(entryIndex) {
     const e = entries[entryIndex]
     const isAteOut = e.notes.startsWith("Ate Out")
+    const { makeAgain: ma, noteText: nt } = parseFeedback(e.feedback)
     setDate(e.date)
     setRecipeName(e.recipeName)
     setCategory(e.category)
     setNotes(isAteOut ? e.notes.replace(/^Ate Out(?:\s*—\s*)?/, "") : e.notes)
     setAteOut(isAteOut)
+    setFormRating(e.rating || 0)
+    setFormMakeAgain(ma)
+    setFormNote(nt)
     setEditingIndex(entryIndex)
     setDeleteConfirm(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -183,13 +197,19 @@ export default function CookLog() {
     }
   }
 
-  async function saveRating(origIndex) {
+  async function saveRating(origIndex, overrides = {}) {
     const entry = entries[origIndex]
     const pending = pendingRatings[origIndex] || {}
     const { makeAgain: parsedMakeAgain, noteText: parsedNote } = parseFeedback(entry.feedback)
-    const makeAgain = pending.makeAgain !== undefined ? pending.makeAgain : parsedMakeAgain
-    const noteText = pending.noteText !== undefined ? pending.noteText : parsedNote
-    const rating = pending.rating !== undefined ? pending.rating : (entry.rating || null)
+    const makeAgain = 'makeAgain' in overrides ? overrides.makeAgain
+                    : 'makeAgain' in pending   ? pending.makeAgain
+                    : parsedMakeAgain
+    const noteText  = 'noteText' in overrides  ? overrides.noteText
+                    : 'noteText' in pending    ? pending.noteText
+                    : parsedNote
+    const rating    = 'rating' in overrides    ? overrides.rating
+                    : 'rating' in pending      ? pending.rating
+                    : (entry.rating || null)
     const feedbackStr = makeAgain
       ? (noteText.trim() ? `${makeAgain} — ${noteText.trim()}` : makeAgain)
       : noteText.trim()
@@ -339,6 +359,45 @@ export default function CookLog() {
           />
         </div>
 
+        {/* Inline rating */}
+        <div className="border-t border-gray-100 pt-3 space-y-2">
+          <p className="text-xs text-gray-500 font-medium">How was it? (optional)</p>
+          <div className="flex items-center gap-1">
+            {[1,2,3,4,5].map(star => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setFormRating(prev => prev === star ? 0 : star)}
+                className={`text-3xl leading-none transition-colors ${
+                  star <= formRating ? 'text-amber-400' : 'text-gray-200 hover:text-amber-300'
+                }`}
+                aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
+              >★</button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            {[{label:'Yes',icon:'✅'},{label:'Maybe',icon:'🤔'},{label:'No',icon:'❌'}].map(({label, icon}) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setFormMakeAgain(prev => prev === label ? null : label)}
+                className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                  formMakeAgain === label
+                    ? 'bg-green-50 border-green-400 text-green-700 font-semibold'
+                    : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
+                }`}
+              >{icon} {label}</button>
+            ))}
+          </div>
+          <input
+            type="text"
+            value={formNote}
+            onChange={e => setFormNote(e.target.value)}
+            placeholder="Add a note... (optional)"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+
         <button
           type="submit"
           disabled={saving || (!ateOut && !recipeName.trim())}
@@ -397,10 +456,10 @@ export default function CookLog() {
               const isEditing = editingIndex === origIndex
               const { makeAgain: parsedMakeAgain, noteText: parsedNote } = parseFeedback(entry.feedback)
               const pending = pendingRatings[origIndex] || {}
-              const effectiveRating = pending.rating !== undefined ? pending.rating : (entry.rating || 0)
-              const effectiveMakeAgain = pending.makeAgain !== undefined ? pending.makeAgain : parsedMakeAgain
-              const effectiveNote = pending.noteText !== undefined ? pending.noteText : parsedNote
-              const hasChanges = Object.keys(pending).length > 0
+              const effectiveRating = 'rating' in pending ? pending.rating : (entry.rating || 0)
+              const effectiveMakeAgain = 'makeAgain' in pending ? pending.makeAgain : parsedMakeAgain
+              const effectiveNote = 'noteText' in pending ? pending.noteText : parsedNote
+              const hasNoteChange = 'noteText' in pending
               const isSaving = savingRating === origIndex
               return (
                 <div
@@ -465,53 +524,64 @@ export default function CookLog() {
                   </div>
 
                   {/* Rating panel */}
-                  <div className="mt-2 pt-2 border-t border-gray-100 space-y-1.5">
-                    <div className="flex items-center gap-0.5">
+                  <div className="mt-2 pt-2 border-t border-gray-100 space-y-2">
+                    {/* Stars */}
+                    <div className="flex items-center gap-1">
                       {[1,2,3,4,5].map(star => (
                         <button
                           key={star}
                           type="button"
-                          onClick={() => setPendingRatings(prev => ({ ...prev, [origIndex]: { ...(prev[origIndex] || {}), rating: star } }))}
-                          className={`text-xl leading-none transition-colors ${star <= effectiveRating ? 'text-amber-400' : 'text-gray-200 hover:text-amber-200'}`}
+                          disabled={isSaving}
+                          onClick={() => {
+                            const newRating = star === effectiveRating ? 0 : star
+                            setPendingRatings(prev => ({ ...prev, [origIndex]: { ...(prev[origIndex] || {}), rating: newRating } }))
+                            saveRating(origIndex, { rating: newRating })
+                          }}
+                          className={`text-2xl leading-none transition-colors touch-manipulation ${
+                            star <= effectiveRating ? 'text-amber-400' : 'text-gray-200 hover:text-amber-300'
+                          } disabled:opacity-40`}
                           aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
                         >★</button>
                       ))}
-                      {effectiveRating > 0 && (
-                        <span className="text-xs text-gray-400 ml-1.5">{effectiveRating}/5</span>
-                      )}
+                      {isSaving && <span className="text-xs text-gray-400 ml-1 animate-pulse">saving…</span>}
                     </div>
-                    <div className="flex items-center gap-1">
+                    {/* Would make again */}
+                    <div className="flex items-center gap-2">
                       {[{label:'Yes',icon:'✅'},{label:'Maybe',icon:'🤔'},{label:'No',icon:'❌'}].map(({label, icon}) => (
                         <button
                           key={label}
                           type="button"
-                          onClick={() => setPendingRatings(prev => ({
-                            ...prev,
-                            [origIndex]: { ...(prev[origIndex] || {}), makeAgain: effectiveMakeAgain === label ? null : label }
-                          }))}
-                          className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                          disabled={isSaving}
+                          onClick={() => {
+                            const newMakeAgain = effectiveMakeAgain === label ? null : label
+                            setPendingRatings(prev => ({ ...prev, [origIndex]: { ...(prev[origIndex] || {}), makeAgain: newMakeAgain } }))
+                            saveRating(origIndex, { makeAgain: newMakeAgain })
+                          }}
+                          className={`text-sm px-3 py-1.5 rounded-full border transition-colors touch-manipulation ${
                             effectiveMakeAgain === label
-                              ? 'bg-green-50 border-green-400 text-green-700 font-medium'
+                              ? 'bg-green-50 border-green-400 text-green-700 font-semibold'
                               : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
-                          }`}
+                          } disabled:opacity-40`}
                         >{icon} {label}</button>
                       ))}
                     </div>
+                    {/* Note */}
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
                         value={effectiveNote}
                         onChange={e => setPendingRatings(prev => ({ ...prev, [origIndex]: { ...(prev[origIndex] || {}), noteText: e.target.value } }))}
-                        placeholder="Feedback (e.g. needed more spice)"
-                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-green-400"
+                        onKeyDown={e => e.key === 'Enter' && hasNoteChange && saveRating(origIndex)}
+                        placeholder="Add a note... (optional)"
+                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-green-400"
                       />
-                      {hasChanges && (
+                      {hasNoteChange && (
                         <button
                           type="button"
                           onClick={() => saveRating(origIndex)}
                           disabled={isSaving}
-                          className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium disabled:opacity-50 flex-shrink-0"
-                        >{isSaving ? 'Saving…' : 'Save'}</button>
+                          className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-medium disabled:opacity-50 flex-shrink-0 touch-manipulation"
+                        >{isSaving ? 'Saving…' : 'Save note'}</button>
                       )}
                     </div>
                   </div>
