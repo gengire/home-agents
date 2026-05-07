@@ -345,6 +345,27 @@ When ratings data exists, add a **Ratings Snapshot** line to the Cook Log Insigh
 
 ---
 
+## Actual Prep Time Analysis
+
+The cook log includes an optional **Prep (min)** column (col 7). Use it to calibrate weeknight meal recommendations.
+
+### Rules
+
+**Calculate average actual time per category**
+- Scan all cook-log.md rows where `Prep (min)` is non-empty.
+- Group by category code. Calculate mean prep time per category.
+- If a category has fewer than 2 timed entries, treat its estimate as unknown.
+
+**Apply to weeknight planning**
+- Any category with an average actual time > 60 min: schedule only for days with buffer time (Thursday, Friday, or a day after a leftover night).
+- Any category averaging ≤ 45 min: safe for any weeknight.
+- Note in the meal plan header if relevant: *"Your average cook time for IND-P meals is ~75 min — scheduled for days with more lead time."*
+
+**Leftovers don't count**
+- Rows with "Leftovers" in the Notes column should be excluded from prep time averages.
+
+---
+
 ## Pantry Burn-Down Mode
 
 If the user says "use what we have" or "pantry mode": build the plan from `data/pantry-inventory.md` first. Flag which meals need zero shopping vs. a few additions.

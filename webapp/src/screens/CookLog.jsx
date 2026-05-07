@@ -53,6 +53,7 @@ export default function CookLog() {
   // Form rating state (log + edit)
   const [formRating, setFormRating] = useState(0)
   const [formMakeAgain, setFormMakeAgain] = useState(null)
+  const [formPrepTime, setFormPrepTime] = useState('')
 
   // Edit / delete state
   const [editingIndex, setEditingIndex] = useState(null)
@@ -106,6 +107,7 @@ export default function CookLog() {
     setAteOut(false)
     setFormRating(0)
     setFormMakeAgain(null)
+    setFormPrepTime('')
   }
 
   async function handleRecipeSelect(name) {
@@ -139,6 +141,7 @@ export default function CookLog() {
         date, recipeName: mealName, category, notes: notesValue,
         rating: formRating || '',
         feedback: formFeedback,
+        prepTime: formPrepTime ? parseInt(formPrepTime, 10) : '',
       }
       const updated = editingIndex !== null
         ? updateCookLogEntry(rawMarkdown, editingIndex, entry)
@@ -171,6 +174,7 @@ export default function CookLog() {
     setAteOut(isAteOut)
     setFormRating(e.rating || 0)
     setFormMakeAgain(ma)
+    setFormPrepTime(e.prepTime ? String(e.prepTime) : '')
     setEditingIndex(entryIndex)
     setDeleteConfirm(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -301,6 +305,23 @@ export default function CookLog() {
             </select>
           </div>
         </div>
+
+        {/* Prep time — inline narrow field, only for home-cooked meals */}
+        {!ateOut && (
+          <div className="flex items-center gap-3">
+            <label className="text-xs text-gray-500 shrink-0">⏱ Actual cook time</label>
+            <input
+              type="number"
+              min="0"
+              max="480"
+              value={formPrepTime}
+              onChange={e => setFormPrepTime(e.target.value)}
+              placeholder="min"
+              className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <span className="text-xs text-gray-400">minutes (optional)</span>
+          </div>
+        )}
 
         {ateOut ? (
           <div>

@@ -46,8 +46,9 @@ export function parseCookLog(markdown) {
     if (!date || date === '—') continue
     const rating = cols.length > 4 && cols[4] ? (parseInt(cols[4], 10) || null) : null
     const feedback = cols.length > 5 ? (cols[5] || '') : ''
+    const prepTime = cols.length > 6 && cols[6] ? (parseInt(cols[6], 10) || null) : null
 
-    entries.push({ date, recipeName, category, notes, rating, feedback })
+    entries.push({ date, recipeName, category, notes, rating, feedback, prepTime })
   }
 
   return entries
@@ -57,8 +58,8 @@ export function parseCookLog(markdown) {
  * Append a new entry row to the Log table only.
  * Returns the updated markdown.
  */
-export function appendCookLogEntry(markdown, { date, recipeName, category, notes = '' }) {
-  const newRow = `| ${date} | ${recipeName} | ${category} | ${notes} | | |`
+export function appendCookLogEntry(markdown, { date, recipeName, category, notes = '', prepTime = '' }) {
+  const newRow = `| ${date} | ${recipeName} | ${category} | ${notes} | | | ${prepTime} |`
   const lines = markdown.split('\n')
   const { headerIdx, end } = findLogTableRange(lines)
 
@@ -98,14 +99,14 @@ function isDataRow(line) {
  * Replace the nth data row (0-indexed) in the cook-log table.
  * Returns the updated markdown.
  */
-export function updateCookLogEntry(markdown, rowIndex, { date, recipeName, category, notes = '', rating = '', feedback = '' }) {
+export function updateCookLogEntry(markdown, rowIndex, { date, recipeName, category, notes = '', rating = '', feedback = '', prepTime = '' }) {
   const lines = markdown.split('\n')
   const { headerIdx, end } = findLogTableRange(lines)
   let dataRowCount = 0
   for (let i = headerIdx; i < end; i++) {
     if (!isDataRow(lines[i])) continue
     if (dataRowCount === rowIndex) {
-      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} |`
+      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} | ${prepTime ?? ''} |`
       return lines.join('\n')
     }
     dataRowCount++
@@ -126,8 +127,8 @@ export function updateCookLogRating(markdown, rowIndex, { rating, feedback }) {
     if (!isDataRow(lines[i])) continue
     if (dataRowCount === rowIndex) {
       const parts = lines[i].split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1)
-      const [date = '', recipeName = '', category = '', notes = ''] = parts
-      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} |`
+      const [date = '', recipeName = '', category = '', notes = '', , , prepTime = ''] = parts
+      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} | ${prepTime} |`
       return lines.join('\n')
     }
     dataRowCount++
