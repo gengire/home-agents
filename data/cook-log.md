@@ -20,6 +20,7 @@ HomeChef will append rows in the format below.
 | 2026-05-04 | Saag Chicken | IND-P | | | |
 | 2026-05-05 | Saag Chicken | IND-P | Leftovers | | |
 | 2026-05-06 | Biryanni Hub | IND-P | Ate Out — Sooo Good.  I had the Biryanni Fish. | | |
+| 2026-05-07 | Pot Luck D&D | AMER | Ate Out — Actually Italian, Spaghetti | | |
 
 ---
 
