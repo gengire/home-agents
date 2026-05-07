@@ -13,6 +13,7 @@ import {
   getRecentCategories,
 } from "../utils/cookLogParser"
 import Toast from "../components/Toast"
+import MicButton from "../components/MicButton"
 
 const LOG_PATH = "data/cook-log.md"
 const RECIPES_PATH = "recipes"
@@ -347,13 +348,16 @@ export default function CookLog() {
 
         <div>
           <label className="block text-xs text-gray-500 mb-1">Notes &amp; feedback (optional)</label>
-          <input
-            type="text"
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder={formMakeAgain ? `e.g. needed more spice, too salty…` : `e.g. Doubled the batch, needed more spice`}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder={formMakeAgain ? `e.g. needed more spice, too salty…` : `e.g. Doubled the batch, needed more spice`}
+              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <MicButton value={notes} onChange={setNotes} disabled={saving} />
+          </div>
         </div>
 
         {/* Inline rating */}

@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext"
 import { getFile, updateFile } from "../github/client"
 import { parsePreferences, serializePreferences } from "../utils/preferencesParser"
 import Toast from "../components/Toast"
+import MicButton from "../components/MicButton"
 
 const PREFS_PATH = "data/family-preferences.md"
 
@@ -52,6 +53,7 @@ function TagInput({ tags, onChange, placeholder }) {
           placeholder={placeholder}
           className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
         />
+        <MicButton value={input} onChange={setInput} />
         <button
           type="button"
           onClick={addTag}
@@ -223,6 +225,7 @@ export default function Preferences() {
             placeholder="Add a protein…"
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
           />
+          <MicButton value={newProtein} onChange={setNewProtein} />
           <button type="button" onClick={addProtein} className="bg-green-600 text-white px-3 py-2 rounded-lg">
             <Plus size={16} />
           </button>
