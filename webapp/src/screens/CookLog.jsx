@@ -6,6 +6,7 @@ import {
   parseCookLog,
   appendCookLogEntry,
   updateCookLogEntry,
+  updateCookLogRating,
   deleteCookLogEntry,
   CATEGORIES,
   getCategoryStyle,
@@ -18,6 +19,15 @@ const RECIPES_PATH = "recipes"
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
+}
+
+function parseFeedback(feedback = '') {
+  if (!feedback) return { makeAgain: null, noteText: '' }
+  for (const label of ['Yes', 'Maybe', 'No']) {
+    if (feedback === label) return { makeAgain: label, noteText: '' }
+    if (feedback.startsWith(label + ' — ')) return { makeAgain: label, noteText: feedback.slice(label.length + 3) }
+  }
+  return { makeAgain: null, noteText: feedback }
 }
 
 export default function CookLog() {
@@ -43,6 +53,10 @@ export default function CookLog() {
   const [editingIndex, setEditingIndex] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [fetchingCategory, setFetchingCategory] = useState(false)
+
+  // Rating state
+  const [pendingRatings, setPendingRatings] = useState({})
+  const [savingRating, setSavingRating] = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -111,7 +125,12 @@ export default function CookLog() {
         ? rawNotes ? `Ate Out — ${rawNotes}` : "Ate Out"
         : rawNotes
       const mealName = ateOut ? (recipeName.trim() || "Ate Out") : recipeName.trim()
-      const entry = { date, recipeName: mealName, category, notes: notesValue }
+      const existingEntry = editingIndex !== null ? entries[editingIndex] : null
+      const entry = {
+        date, recipeName: mealName, category, notes: notesValue,
+        rating: existingEntry?.rating ?? '',
+        feedback: existingEntry?.feedback ?? '',
+      }
       const updated = editingIndex !== null
         ? updateCookLogEntry(rawMarkdown, editingIndex, entry)
         : appendCookLogEntry(rawMarkdown, entry)
@@ -161,6 +180,33 @@ export default function CookLog() {
       setToast({ message: "❌ Delete failed.", type: "error" })
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function saveRating(origIndex) {
+    const entry = entries[origIndex]
+    const pending = pendingRatings[origIndex] || {}
+    const { makeAgain: parsedMakeAgain, noteText: parsedNote } = parseFeedback(entry.feedback)
+    const makeAgain = pending.makeAgain !== undefined ? pending.makeAgain : parsedMakeAgain
+    const noteText = pending.noteText !== undefined ? pending.noteText : parsedNote
+    const rating = pending.rating !== undefined ? pending.rating : (entry.rating || null)
+    const feedbackStr = makeAgain
+      ? (noteText.trim() ? `${makeAgain} — ${noteText.trim()}` : makeAgain)
+      : noteText.trim()
+    setSavingRating(origIndex)
+    try {
+      const updated = updateCookLogRating(rawMarkdown, origIndex, { rating: rating ?? '', feedback: feedbackStr })
+      await updateFile(repo, LOG_PATH, updated, sha, `Cook log rating — ${entry.recipeName}`)
+      const { content: fresh, sha: newSha } = await getFile(repo, LOG_PATH)
+      setRawMarkdown(fresh)
+      setSha(newSha)
+      setEntries(parseCookLog(fresh))
+      setPendingRatings(prev => { const n = { ...prev }; delete n[origIndex]; return n })
+      setToast({ message: '⭐ Rating saved!', type: 'success' })
+    } catch {
+      setToast({ message: '❌ Rating save failed.', type: 'error' })
+    } finally {
+      setSavingRating(null)
     }
   }
 
@@ -349,62 +395,123 @@ export default function CookLog() {
               // recentEntries is reversed; find orignal index in entries array
               const origIndex = entries.indexOf(entry)
               const isEditing = editingIndex === origIndex
+              const { makeAgain: parsedMakeAgain, noteText: parsedNote } = parseFeedback(entry.feedback)
+              const pending = pendingRatings[origIndex] || {}
+              const effectiveRating = pending.rating !== undefined ? pending.rating : (entry.rating || 0)
+              const effectiveMakeAgain = pending.makeAgain !== undefined ? pending.makeAgain : parsedMakeAgain
+              const effectiveNote = pending.noteText !== undefined ? pending.noteText : parsedNote
+              const hasChanges = Object.keys(pending).length > 0
+              const isSaving = savingRating === origIndex
               return (
                 <div
                   key={i}
-                  className={`bg-white rounded-xl border px-4 py-3 flex items-start gap-3 ${
+                  className={`bg-white rounded-xl border px-4 py-3 ${
                     isEditing ? "border-green-400 ring-1 ring-green-300" : "border-gray-200"
                   }`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      {entry.notes.startsWith("Ate Out") && <span title="Ate out">🍽️</span>}
-                      <p className="text-sm font-medium text-gray-900 truncate">{entry.recipeName}</p>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        {entry.notes.startsWith("Ate Out") && <span title="Ate out">🍽️</span>}
+                        <p className="text-sm font-medium text-gray-900 truncate">{entry.recipeName}</p>
+                      </div>
+                      {entry.notes && (
+                        <p className="text-xs text-gray-400 mt-0.5 truncate">{entry.notes}</p>
+                      )}
                     </div>
-                    {entry.notes && (
-                      <p className="text-xs text-gray-400 mt-0.5 truncate">{entry.notes}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getCategoryStyle(entry.category)}`}>
-                      {entry.category}
-                    </span>
-                    <span className="text-xs text-gray-400">{entry.date}</span>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <button
-                        onClick={() => handleEdit(origIndex)}
-                        className="text-gray-400 hover:text-blue-500 p-0.5"
-                        title="Edit"
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      {deleteConfirm === origIndex ? (
-                        <>
-                          <span className="text-xs text-gray-500">Delete?</span>
-                          <button
-                            onClick={() => handleDelete(origIndex)}
-                            disabled={saving}
-                            className="text-red-500 hover:text-red-700 p-0.5 disabled:opacity-50"
-                            title="Confirm delete"
-                          >
-                            <Check size={13} />
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(null)}
-                            className="text-gray-400 hover:text-gray-600 p-0.5"
-                            title="Cancel"
-                          >
-                            <X size={13} />
-                          </button>
-                        </>
-                      ) : (
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getCategoryStyle(entry.category)}`}>
+                        {entry.category}
+                      </span>
+                      <span className="text-xs text-gray-400">{entry.date}</span>
+                      <div className="flex items-center gap-1 mt-0.5">
                         <button
-                          onClick={() => setDeleteConfirm(origIndex)}
-                          className="text-gray-400 hover:text-red-500 p-0.5"
-                          title="Delete"
+                          onClick={() => handleEdit(origIndex)}
+                          className="text-gray-400 hover:text-blue-500 p-0.5"
+                          title="Edit"
                         >
-                          <Trash2 size={13} />
+                          <Pencil size={13} />
                         </button>
+                        {deleteConfirm === origIndex ? (
+                          <>
+                            <span className="text-xs text-gray-500">Delete?</span>
+                            <button
+                              onClick={() => handleDelete(origIndex)}
+                              disabled={saving}
+                              className="text-red-500 hover:text-red-700 p-0.5 disabled:opacity-50"
+                              title="Confirm delete"
+                            >
+                              <Check size={13} />
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirm(null)}
+                              className="text-gray-400 hover:text-gray-600 p-0.5"
+                              title="Cancel"
+                            >
+                              <X size={13} />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteConfirm(origIndex)}
+                            className="text-gray-400 hover:text-red-500 p-0.5"
+                            title="Delete"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rating panel */}
+                  <div className="mt-2 pt-2 border-t border-gray-100 space-y-1.5">
+                    <div className="flex items-center gap-0.5">
+                      {[1,2,3,4,5].map(star => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setPendingRatings(prev => ({ ...prev, [origIndex]: { ...(prev[origIndex] || {}), rating: star } }))}
+                          className={`text-xl leading-none transition-colors ${star <= effectiveRating ? 'text-amber-400' : 'text-gray-200 hover:text-amber-200'}`}
+                          aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
+                        >★</button>
+                      ))}
+                      {effectiveRating > 0 && (
+                        <span className="text-xs text-gray-400 ml-1.5">{effectiveRating}/5</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[{label:'Yes',icon:'✅'},{label:'Maybe',icon:'🤔'},{label:'No',icon:'❌'}].map(({label, icon}) => (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={() => setPendingRatings(prev => ({
+                            ...prev,
+                            [origIndex]: { ...(prev[origIndex] || {}), makeAgain: effectiveMakeAgain === label ? null : label }
+                          }))}
+                          className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                            effectiveMakeAgain === label
+                              ? 'bg-green-50 border-green-400 text-green-700 font-medium'
+                              : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
+                          }`}
+                        >{icon} {label}</button>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={effectiveNote}
+                        onChange={e => setPendingRatings(prev => ({ ...prev, [origIndex]: { ...(prev[origIndex] || {}), noteText: e.target.value } }))}
+                        placeholder="Feedback (e.g. needed more spice)"
+                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-green-400"
+                      />
+                      {hasChanges && (
+                        <button
+                          type="button"
+                          onClick={() => saveRating(origIndex)}
+                          disabled={isSaving}
+                          className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg font-medium disabled:opacity-50 flex-shrink-0"
+                        >{isSaving ? 'Saving…' : 'Save'}</button>
                       )}
                     </div>
                   </div>

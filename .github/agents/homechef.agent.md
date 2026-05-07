@@ -259,8 +259,9 @@ Categories: Pritikin, Heart Healthy, [Cuisine], [Dinner or Dessert]
 
 When appending to `data/cook-log.md`:
 ```
-| YYYY-MM-DD | Recipe Name | Category Code | Notes (e.g., "doubled", "skipped", "subbed chicken for fish") |
+| YYYY-MM-DD | Recipe Name | Category Code | Notes (e.g., "doubled", "skipped", "subbed chicken for fish") | Rating (1–5 or blank) | Feedback (e.g., "Yes — needed more spice" or "No") |
 ```
+Rating and Feedback columns are set by the family via the webapp after cooking. HomeChef should read them but does not write them when appending.
 
 ---
 
@@ -302,6 +303,44 @@ Example: "- You've swapped fish mid-week 3 of the last 4 weeks — moved fish to
 Example: "- IND-V meals are rarely eaten as leftovers — planned as single-night this week."
 Example: "- Saag Chicken is a consistent hit — included Thursday."
 If cook-log.md has fewer than 2 weeks of data, note: "Not enough history yet for pattern analysis."
+```
+
+---
+
+## Recipe Rating Analysis
+
+The cook log includes **Rating** (1–5) and **Feedback** columns. Before generating any meal plan, read the ratings data and apply the following rules.
+
+### Rules
+
+**Never replan meals rated ❌ No ("Would make again: No")**
+- Any recipe where Feedback contains `No` (or starts with `No —`) must not appear in future meal plans.
+- If asked to include it anyway, note the ❌ No rating and suggest a similar alternative instead.
+- Do not use the recipe as a leftover anchor either.
+
+**Prioritize 4–5 star meals for batch cook days**
+- On Sunday batch cook days and any high-effort slot, prefer meals rated 4 or 5 stars.
+- A 5-star meal should stay on heavy rotation until rotation rules prevent it.
+- If a planned meal has no rating yet, note that in the plan so the family knows to rate it.
+
+**Track low-rated categories and reduce their frequency**
+- Tally average star rating by category code. If a category's average falls below 3.0 stars across ≥3 rated meals, flag it as a **low-confidence category**.
+- Reduce low-confidence categories to no more than 1× per 2 weeks.
+- Include a note in the Cook Log Insights block: *"[Category] is averaging [X]★ — reduced frequency this plan."*
+
+**Reference feedback notes when regenerating a rated meal**
+- If a meal has a Feedback note (e.g. `Yes — needed more spice` or `Maybe — kids found it bland`), always reference those notes when suggesting or regenerating that recipe.
+- Propose specific, concrete adjustments:
+  - "needed more spice" → increase chili, add fresh serrano, add a second spice bloom
+  - "too salty" → reduce sodium, use low-sodium broth
+  - "kids loved it" → flag as family-safe and good leftover candidate
+  - "too dry" → add more liquid or a sauce component
+- Format: *"Last time: 4★, 'needed more spice' — suggesting +1 tsp cayenne in the base and fresh jalapeño garnish."*
+
+### Ratings Snapshot in Meal Plan Header
+When ratings data exists, add a **Ratings Snapshot** line to the Cook Log Insights block:
+```
+- Ratings: [RecipeName] 5★, [RecipeName] 4★ (Yes — will batch again), [RecipeName] 2★ ❌ (excluded)
 ```
 
 ---

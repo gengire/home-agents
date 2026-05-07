@@ -15,10 +15,10 @@ HomeChef will append rows in the format below.
 
 ## Log
 
-| Date | Recipe Name | Category | Notes |
-|------|-------------|----------|-------|
-| 2026-05-04 | Saag Chicken | IND-P | |
-| 2026-05-05 | Saag Chicken | IND-P | Leftovers |
+| Date | Recipe Name | Category | Notes | Rating | Feedback |
+|------|-------------|----------|-------|--------|----------|
+| 2026-05-04 | Saag Chicken | IND-P | | | |
+| 2026-05-05 | Saag Chicken | IND-P | Leftovers | | |
 
 ---
 

@@ -44,8 +44,10 @@ export function parseCookLog(markdown) {
     if (cols.length < 3) continue
     const [date, recipeName, category, notes = ''] = cols
     if (!date || date === '—') continue
+    const rating = cols.length > 4 && cols[4] ? (parseInt(cols[4], 10) || null) : null
+    const feedback = cols.length > 5 ? (cols[5] || '') : ''
 
-    entries.push({ date, recipeName, category, notes })
+    entries.push({ date, recipeName, category, notes, rating, feedback })
   }
 
   return entries
@@ -56,7 +58,7 @@ export function parseCookLog(markdown) {
  * Returns the updated markdown.
  */
 export function appendCookLogEntry(markdown, { date, recipeName, category, notes = '' }) {
-  const newRow = `| ${date} | ${recipeName} | ${category} | ${notes} |`
+  const newRow = `| ${date} | ${recipeName} | ${category} | ${notes} | | |`
   const lines = markdown.split('\n')
   const { headerIdx, end } = findLogTableRange(lines)
 
@@ -96,14 +98,36 @@ function isDataRow(line) {
  * Replace the nth data row (0-indexed) in the cook-log table.
  * Returns the updated markdown.
  */
-export function updateCookLogEntry(markdown, rowIndex, { date, recipeName, category, notes = '' }) {
+export function updateCookLogEntry(markdown, rowIndex, { date, recipeName, category, notes = '', rating = '', feedback = '' }) {
   const lines = markdown.split('\n')
   const { headerIdx, end } = findLogTableRange(lines)
   let dataRowCount = 0
   for (let i = headerIdx; i < end; i++) {
     if (!isDataRow(lines[i])) continue
     if (dataRowCount === rowIndex) {
-      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} |`
+      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} |`
+      return lines.join('\n')
+    }
+    dataRowCount++
+  }
+  return markdown
+}
+
+/**
+ * Update only the Rating and Feedback columns for the nth data row (0-indexed).
+ * Preserves Date, Recipe Name, Category, and Notes.
+ * Returns the updated markdown.
+ */
+export function updateCookLogRating(markdown, rowIndex, { rating, feedback }) {
+  const lines = markdown.split('\n')
+  const { headerIdx, end } = findLogTableRange(lines)
+  let dataRowCount = 0
+  for (let i = headerIdx; i < end; i++) {
+    if (!isDataRow(lines[i])) continue
+    if (dataRowCount === rowIndex) {
+      const parts = lines[i].split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1)
+      const [date = '', recipeName = '', category = '', notes = ''] = parts
+      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} |`
       return lines.join('\n')
     }
     dataRowCount++
