@@ -52,7 +52,6 @@ export default function CookLog() {
   // Form rating state (log + edit)
   const [formRating, setFormRating] = useState(0)
   const [formMakeAgain, setFormMakeAgain] = useState(null)
-  const [formNote, setFormNote] = useState("")
 
   // Edit / delete state
   const [editingIndex, setEditingIndex] = useState(null)
@@ -106,7 +105,6 @@ export default function CookLog() {
     setAteOut(false)
     setFormRating(0)
     setFormMakeAgain(null)
-    setFormNote("")
   }
 
   async function handleRecipeSelect(name) {
@@ -134,8 +132,8 @@ export default function CookLog() {
         : rawNotes
       const mealName = ateOut ? (recipeName.trim() || "Ate Out") : recipeName.trim()
       const formFeedback = formMakeAgain
-        ? (formNote.trim() ? `${formMakeAgain} — ${formNote.trim()}` : formMakeAgain)
-        : formNote.trim()
+        ? (rawNotes ? `${formMakeAgain} — ${rawNotes}` : formMakeAgain)
+        : ''
       const entry = {
         date, recipeName: mealName, category, notes: notesValue,
         rating: formRating || '',
@@ -172,7 +170,6 @@ export default function CookLog() {
     setAteOut(isAteOut)
     setFormRating(e.rating || 0)
     setFormMakeAgain(ma)
-    setFormNote(nt)
     setEditingIndex(entryIndex)
     setDeleteConfirm(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -349,12 +346,12 @@ export default function CookLog() {
         )}
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Notes (optional)</label>
+          <label className="block text-xs text-gray-500 mb-1">Notes &amp; feedback (optional)</label>
           <input
             type="text"
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            placeholder="e.g. Doubled the batch"
+            placeholder={formMakeAgain ? `e.g. needed more spice, too salty…` : `e.g. Doubled the batch, needed more spice`}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
@@ -389,13 +386,9 @@ export default function CookLog() {
               >{icon} {label}</button>
             ))}
           </div>
-          <input
-            type="text"
-            value={formNote}
-            onChange={e => setFormNote(e.target.value)}
-            placeholder="Add a note... (optional)"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
+          {formMakeAgain && (
+            <p className="text-xs text-gray-400">Your note above will be saved with this rating.</p>
+          )}
         </div>
 
         <button
