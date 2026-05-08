@@ -17,6 +17,7 @@ import MicButton from "../components/MicButton"
 
 const LOG_PATH = "data/cook-log.md"
 const RECIPES_PATH = "recipes"
+const NOTES_PATH = "data/recipe-notes.json"
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
@@ -64,6 +65,11 @@ export default function CookLog() {
   const [pendingRatings, setPendingRatings] = useState({})
   const [savingRating, setSavingRating] = useState(null)
 
+  // Recipe iteration notes
+  const [recipeNotes, setRecipeNotes] = useState({})      // { recipeName: { iterations: [...] } }
+  const [recipeNotesSha, setRecipeNotesSha] = useState(undefined)
+  const [expandedNotes, setExpandedNotes] = useState({})  // { entryIndex: bool }
+
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -85,6 +91,16 @@ export default function CookLog() {
         })
       setRecipeNames(names)
       setRecipeFileMap(fileMap)
+
+      // Load recipe-notes.json (non-fatal if missing)
+      try {
+        const { content: notesContent, sha: notesSha } = await getFile(repo, NOTES_PATH)
+        setRecipeNotes(JSON.parse(notesContent || '{}'))
+        setRecipeNotesSha(notesSha)
+      } catch {
+        setRecipeNotes({})
+        setRecipeNotesSha(undefined)
+      }
     } catch {
       setToast({ message: "Failed to load cook log.", type: "error" })
     } finally {
@@ -93,6 +109,22 @@ export default function CookLog() {
   }, [repo])
 
   useEffect(() => { load() }, [load])
+
+  /** Upsert an iteration note for a recipe into recipe-notes.json */
+  async function upsertRecipeNote({ recipeName, date, rating, makeAgain, noteText }) {
+    if (!noteText.trim()) return  // nothing to record
+    try {
+      const current = structuredClone(recipeNotes)
+      if (!current[recipeName]) current[recipeName] = { iterations: [] }
+      current[recipeName].iterations.push({ date, rating: rating || null, makeAgain: makeAgain || null, note: noteText.trim() })
+      const json = JSON.stringify(current, null, 2)
+      await updateFile(repo, NOTES_PATH, json, recipeNotesSha, `Recipe notes — ${recipeName} ${date}`)
+      // Refresh sha
+      const { sha: newSha } = await getFile(repo, NOTES_PATH)
+      setRecipeNotesSha(newSha)
+      setRecipeNotes(current)
+    } catch { /* silent — note write failure should not block the main save */ }
+  }
 
   const suggestions = recipeName.length > 0
     ? recipeNames.filter(n => n.toLowerCase().includes(recipeName.toLowerCase()))
@@ -150,6 +182,10 @@ export default function CookLog() {
         ? `Cook log edit — ${entry.recipeName} ${entry.date}`
         : `Cook log — ${entry.recipeName} ${entry.date}`
       await updateFile(repo, LOG_PATH, updated, sha, msg)
+      // Write iteration note if a note was entered with a rating
+      if (!ateOut && formRating && rawNotes) {
+        await upsertRecipeNote({ recipeName: mealName, date, rating: formRating, makeAgain: formMakeAgain, noteText: rawNotes })
+      }
       const { content: fresh, sha: newSha } = await getFile(repo, LOG_PATH)
       setRawMarkdown(fresh)
       setSha(newSha)
@@ -219,6 +255,10 @@ export default function CookLog() {
     try {
       const updated = updateCookLogRating(rawMarkdown, origIndex, { rating: rating ?? '', feedback: feedbackStr })
       await updateFile(repo, LOG_PATH, updated, sha, `Cook log rating — ${entry.recipeName}`)
+      // Write iteration note if noteText was set
+      if (noteText.trim()) {
+        await upsertRecipeNote({ recipeName: entry.recipeName, date: entry.date, rating: rating || null, makeAgain, noteText })
+      }
       const { content: fresh, sha: newSha } = await getFile(repo, LOG_PATH)
       setRawMarkdown(fresh)
       setSha(newSha)
@@ -602,6 +642,37 @@ export default function CookLog() {
                         >{isSaving ? 'Saving…' : 'Save note'}</button>
                       )}
                     </div>
+
+                    {/* Iteration history badge */}
+                    {(() => {
+                      const iterations = recipeNotes[entry.recipeName]?.iterations
+                      if (!iterations?.length) return null
+                      const isOpen = !!expandedNotes[origIndex]
+                      return (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedNotes(prev => ({ ...prev, [origIndex]: !prev[origIndex] }))}
+                            className="inline-flex items-center gap-1 text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-2.5 py-0.5 hover:bg-teal-100 transition-colors"
+                          >
+                            📝 {iterations.length} note{iterations.length !== 1 ? 's' : ''}
+                            <span className="text-teal-500 ml-0.5">{isOpen ? '▲' : '▼'}</span>
+                          </button>
+                          {isOpen && (
+                            <div className="mt-2 space-y-1.5 border-l-2 border-teal-200 pl-2.5">
+                              {[...iterations].reverse().map((it, itIdx) => (
+                                <div key={itIdx} className="text-xs text-gray-600">
+                                  <span className="font-medium text-gray-400">{it.date}</span>
+                                  {it.makeAgain && <span className={`ml-1.5 font-medium ${it.makeAgain === 'Yes' ? 'text-green-600' : it.makeAgain === 'Maybe' ? 'text-yellow-600' : 'text-red-600'}`}>{it.makeAgain}</span>}
+                                  {it.rating && <span className="ml-1 text-yellow-500">{'★'.repeat(it.rating)}</span>}
+                                  {it.note && <span className="ml-1.5 italic">"{it.note}"</span>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()}
                   </div>
                 </div>
               )

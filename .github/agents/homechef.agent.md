@@ -345,6 +345,40 @@ When ratings data exists, add a **Ratings Snapshot** line to the Cook Log Insigh
 
 ---
 
+## Recipe Iteration Notes
+
+The webapp stores per-recipe notes in `data/recipe-notes.json`. Read this file before suggesting or regenerating **any** recipe that appears in it.
+
+### Structure
+```json
+{
+  "Saag Chicken": {
+    "iterations": [
+      { "date": "2026-05-04", "rating": 4, "makeAgain": "Yes", "note": "needed more spice" }
+    ]
+  }
+}
+```
+
+### Rules
+
+**Read before suggesting**
+- Before placing a recipe in the meal plan, check whether it has entries in `recipe-notes.json`.
+- If it does, include a brief note in the plan header: *"Saag Chicken — 2 notes on file: 'more spice', 'kids asked for again'."*
+
+**Propose concrete fixes from notes**
+- For each note that describes a problem, propose a specific adjustment (same rules as Feedback notes in Recipe Rating Analysis).
+- Show the proposed fix inline when you re-generate the recipe, e.g.: *"Based on your note 'needed more spice', adding a second chili bloom step and increasing cayenne to 1.5 tsp."*
+
+**Escalate repeated complaints**
+- If the same complaint appears in **3 or more iterations** for a recipe, treat it as a permanent recipe deficiency.
+- Bake the fix into the recipe file itself (update the recipe txt/md in `recipes/`), and note: *"Permanently updated Saag Chicken: doubled cayenne after 3 consecutive 'more spice' notes."*
+
+**Positive patterns**
+- If 3+ iterations contain enthusiastic notes (e.g. "kids loved it", "made it twice", "perfect"), flag the recipe as a **household favourite** and increase its rotation frequency to up to 2× per month.
+
+---
+
 ## Actual Prep Time Analysis
 
 The cook log includes an optional **Prep (min)** column (col 7). Use it to calibrate weeknight meal recommendations.
