@@ -1,19 +1,15 @@
 # Home Maintenance Schedule - Norfolk, VA
-**Last updated:** April 30, 2026
+**Last updated:** May 7, 2026
 
 ## HVAC & Google Nest Thermostat
-- Last HVAC air filter changed: [Date]
+- Last HVAC air filter changed: 
 - Next HVAC filter check: 
-- Next HVAC filter replacement: 
 - Current Nest humidity target: 45-55% (important for Virginia humidity control)
 - Last Nest schedule/season review: 
-- Notes: Spring 2026 → Prepare for cooling season. Check and clean filters before heavy AC use.
 
 ## Safety & Recurring Tasks
 - Smoke & CO detectors last tested: 
-- Smoke & CO detector batteries replaced: 
 - Water heater last flushed: 
-- Gutters last cleaned: 
 
 ## Seasonal / Virginia-Specific
 - Spring: AC preparation, dehumidifier use if needed, pollen control
