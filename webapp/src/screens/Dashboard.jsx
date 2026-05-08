@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { RefreshCw, ChefHat, ShoppingBasket, CalendarDays, Wrench, AlertTriangle, CheckCircle2, ClipboardList, ChevronDown, ChevronUp, Recycle } from "lucide-react"
+import { RefreshCw, ChefHat, ShoppingBasket, CalendarDays, Wrench, AlertTriangle, CheckCircle2, ClipboardList, ChevronDown, ChevronUp, Recycle, TrendingUp } from "lucide-react"
 import { useApp } from "../context/AppContext"
 import { getFile, updateFile, listFiles } from "../github/client"
 import { parseCookLog, CATEGORIES, getCategoryStyle, getRecentCategories } from "../utils/cookLogParser"
@@ -390,7 +390,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-2">
         <QuickAction
           icon={ChefHat}
           label="Log Dinner"
@@ -411,6 +411,13 @@ export default function Dashboard() {
           sub="Maintenance"
           color="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
           onClick={() => navigate('/maintenance')}
+        />
+        <QuickAction
+          icon={TrendingUp}
+          label="Health"
+          sub="Nutrition"
+          color="border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+          onClick={() => navigate('/health')}
         />
       </div>
 
@@ -551,6 +558,22 @@ export default function Dashboard() {
           {error}
         </div>
       )}
+
+      {/* Health Trends mini-widget */}
+      <button
+        type="button"
+        onClick={() => navigate('/health')}
+        className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-left hover:border-green-300 transition-colors"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp size={16} className="text-green-600" />
+            <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">Health Trends</span>
+          </div>
+          <span className="text-xs text-gray-400">Nutrition →</span>
+        </div>
+        <p className="text-xs text-gray-500 mt-1.5">Pritikin targets · per-serving macros · recipe compliance</p>
+      </button>
 
       {toast && <Toast {...toast} onDismiss={() => setToast(null)} />}
     </div>

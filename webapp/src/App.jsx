@@ -8,6 +8,7 @@ import MealPlan from "./screens/MealPlan"
 import Preferences from "./screens/Preferences"
 import Maintenance from "./screens/Maintenance"
 import Settings from "./screens/Settings"
+import HealthTrends from "./screens/HealthTrends"
 import { lazy, Suspense } from "react"
 const Help = lazy(() => import("./screens/Help"))
 import BottomNav from "./components/BottomNav"
@@ -22,6 +23,7 @@ const ROUTE_TITLES = {
   '/maintenance': '🔧 Maintenance',
   '/settings': '⚙️ Settings',
   '/help': '📖 Help & Guides',
+  '/health': '📊 Health Trends',
 }
 
 function AppShell() {
@@ -53,6 +55,7 @@ function AppShell() {
           <Route path="/maintenance" element={<Maintenance />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/help" element={<Suspense fallback={<div className="flex items-center justify-center h-48 text-gray-400 text-sm">Loading…</div>}><Help /></Suspense>} />
+          <Route path="/health" element={<HealthTrends />} />
         </Routes>
       </main>
       <BottomNav />
