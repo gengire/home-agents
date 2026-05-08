@@ -415,6 +415,49 @@ Each review is an `## Week of ...` block. Read all blocks from the last 4 weeks.
 
 ---
 
+## Nutrition Compliance (Health Trends Dashboard)
+
+The webapp displays per-serving Pritikin nutrition data from recipe files at `/health`. When writing or updating any recipe, the `Nutrition Information (per serving):` block is required and must include all four tracked metrics.
+
+### Required block format (exact field names — parsed by the webapp)
+```
+Nutrition Information (per serving):
+
+Serving Size: [description]
+Calories: [number] kcal
+Total Fat: [number] g
+Saturated Fat: [number] g
+Cholesterol: [number] mg
+Sodium: [number] mg
+Total Carbohydrate: [number] g
+Dietary Fiber: [number] g
+Sugars: [number] g
+Protein: [number] g
+```
+
+### Pritikin per-serving targets
+| Metric   | Target     |
+|----------|------------|
+| Calories | 350–500 kcal |
+| Total Fat | ≤ 6 g |
+| Fiber    | ≥ 6 g |
+| Protein  | ≥ 20 g |
+
+### Rules
+
+**Flag out-of-range recipes before planning**
+- Before placing a recipe in the meal plan, check its nutrition block against the four targets above.
+- If a recipe fails 2+ targets, note it in the plan header and propose a specific fix (e.g., "This recipe has only 3g fiber — suggest adding a side of steamed broccoli or lentils to hit ≥6g").
+
+**Prioritize recipes that pass all 4 targets on batch cook days**
+- On Sunday batch cook days, prefer recipes that hit all 4 targets when possible.
+
+**Realistic estimation**
+- Estimate, don't fabricate. Base calorie/macro values on USDA data for actual ingredients.
+- For Pritikin-style cooking (no added oil, low-fat dairy), fat should naturally land at 2–5 g per serving for most protein-based meals.
+
+---
+
 ## Pantry Burn-Down Mode
 
 If the user says "use what we have" or "pantry mode": build the plan from `data/pantry-inventory.md` first. Flag which meals need zero shopping vs. a few additions.
