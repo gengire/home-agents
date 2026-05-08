@@ -15,8 +15,8 @@ HomeChef will append rows in the format below.
 
 ## Log
 
-| Date | Recipe Name | Category | Notes | Rating | Feedback | Prep (min) |
-|------|-------------|----------|-------|--------|----------|-----------|
+| Date | Recipe Name | Category | Notes | Rating | Feedback | Prep (min) | Deviations |
+|------|-------------|----------|-------|--------|----------|-----------|------------|
 | 2026-05-04 | Saag Chicken | IND-P |  | 4 | Yes | |
 | 2026-05-05 | Saag Chicken | IND-P | Leftovers | 4 | Yes | |
 | 2026-05-06 | Biryanni Hub | IND-P | Ate Out — Sooo Good.  I had the Biryanni Fish. | | | |

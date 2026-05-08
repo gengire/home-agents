@@ -47,8 +47,9 @@ export function parseCookLog(markdown) {
     const rating = cols.length > 4 && cols[4] ? (parseInt(cols[4], 10) || null) : null
     const feedback = cols.length > 5 ? (cols[5] || '') : ''
     const prepTime = cols.length > 6 && cols[6] ? (parseInt(cols[6], 10) || null) : null
+    const deviations = cols.length > 7 ? (cols[7] || '') : ''
 
-    entries.push({ date, recipeName, category, notes, rating, feedback, prepTime })
+    entries.push({ date, recipeName, category, notes, rating, feedback, prepTime, deviations })
   }
 
   return entries
@@ -59,7 +60,7 @@ export function parseCookLog(markdown) {
  * Returns the updated markdown.
  */
 export function appendCookLogEntry(markdown, { date, recipeName, category, notes = '', prepTime = '' }) {
-  const newRow = `| ${date} | ${recipeName} | ${category} | ${notes} | | | ${prepTime} |`
+  const newRow = `| ${date} | ${recipeName} | ${category} | ${notes} | | | ${prepTime} | |`
   const lines = markdown.split('\n')
   const { headerIdx, end } = findLogTableRange(lines)
 
@@ -99,14 +100,14 @@ function isDataRow(line) {
  * Replace the nth data row (0-indexed) in the cook-log table.
  * Returns the updated markdown.
  */
-export function updateCookLogEntry(markdown, rowIndex, { date, recipeName, category, notes = '', rating = '', feedback = '', prepTime = '' }) {
+export function updateCookLogEntry(markdown, rowIndex, { date, recipeName, category, notes = '', rating = '', feedback = '', prepTime = '', deviations = '' }) {
   const lines = markdown.split('\n')
   const { headerIdx, end } = findLogTableRange(lines)
   let dataRowCount = 0
   for (let i = headerIdx; i < end; i++) {
     if (!isDataRow(lines[i])) continue
     if (dataRowCount === rowIndex) {
-      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} | ${prepTime ?? ''} |`
+      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} | ${prepTime ?? ''} | ${deviations} |`
       return lines.join('\n')
     }
     dataRowCount++
@@ -127,8 +128,8 @@ export function updateCookLogRating(markdown, rowIndex, { rating, feedback }) {
     if (!isDataRow(lines[i])) continue
     if (dataRowCount === rowIndex) {
       const parts = lines[i].split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1)
-      const [date = '', recipeName = '', category = '', notes = '', , , prepTime = ''] = parts
-      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} | ${prepTime} |`
+      const [date = '', recipeName = '', category = '', notes = '', , , prepTime = '', deviations = ''] = parts
+      lines[i] = `| ${date} | ${recipeName} | ${category} | ${notes} | ${rating ?? ''} | ${feedback} | ${prepTime} | ${deviations} |`
       return lines.join('\n')
     }
     dataRowCount++
@@ -194,4 +195,39 @@ export function getRecentCategories(entries, days = 8) {
     if (d >= cutoff) recent.add(entry.category)
   }
   return recent
+}
+
+/**
+ * Serialize deviation arrays into a single cook-log cell string.
+ * prefs: [{what, why}]  subs: [{used, original}]
+ */
+export function serializeDeviations({ prefs = [], subs = [] }) {
+  const parts = [
+    ...prefs.filter(p => p.what.trim()).map(p => `PREF: ${p.what.trim()}${p.why.trim() ? ' — ' + p.why.trim() : ''}`),
+    ...subs.filter(s => s.used.trim() && s.original.trim()).map(s => `SUB: ${s.used.trim()} for ${s.original.trim()}`),
+  ]
+  return parts.join('; ')
+}
+
+/**
+ * Parse a deviation cell string back into { prefs, subs }.
+ */
+export function parseDeviations(str = '') {
+  const prefs = []
+  const subs = []
+  if (!str.trim()) return { prefs, subs }
+  for (const segment of str.split(';').map(s => s.trim()).filter(Boolean)) {
+    if (segment.startsWith('PREF: ')) {
+      const body = segment.slice(6)
+      const sep = body.indexOf(' — ')
+      if (sep !== -1) prefs.push({ what: body.slice(0, sep).trim(), why: body.slice(sep + 3).trim() })
+      else prefs.push({ what: body.trim(), why: '' })
+    } else if (segment.startsWith('SUB: ')) {
+      const body = segment.slice(5)
+      const forIdx = body.indexOf(' for ')
+      if (forIdx !== -1) subs.push({ used: body.slice(0, forIdx).trim(), original: body.slice(forIdx + 5).trim() })
+      else subs.push({ used: body.trim(), original: '' })
+    }
+  }
+  return { prefs, subs }
 }

@@ -345,6 +345,50 @@ When ratings data exists, add a **Ratings Snapshot** line to the Cook Log Insigh
 
 ---
 
+## Recipe Deviation Analysis
+
+The webapp tracks how the family actually cooks each recipe, storing deviation data in `data/recipe-notes.json`. Read this file before generating any meal plan or recipe suggestion.
+
+### Data structure (in recipe-notes.json)
+```json
+{
+  "Saag Chicken": {
+    "preferenceChanges": [
+      { "change": "Cooked chicken separately in avocado oil first", "reason": "Better flavor", "count": 2, "lastRating": 5, "suggestPermanentUpdate": true }
+    ],
+    "substitutions": [
+      { "usedIngredient": "Basmati rice", "originalIngredient": "Brown rice", "count": 3, "avgRating": 4.5, "provenSubstitute": true }
+    ]
+  }
+}
+```
+
+### Rules
+
+**Proactively suggest permanent recipe updates**
+- Before any plan or suggestion, scan all recipes with `suggestPermanentUpdate: true` on any preference change.
+- Tell the user: *"You've cooked [recipe] with [change] [N] times — want me to update the recipe file to reflect how you actually make it?"*
+- Only ask once per planning session, not for every recipe.
+
+**Include proven substitutes as "Known good swap" notes**
+- When suggesting a recipe that has substitutions with `provenSubstitute: true`, add a note in the meal plan: *"Known good swap: [usedIngredient] instead of [originalIngredient] (made [N]× with avg [X]★)"*
+
+**Smart pantry swap — treat proven substitutes as equivalent**
+- When `pantry-inventory.md` shows the original ingredient is unavailable but a proven substitute IS available, do NOT flag it as a missing ingredient.
+- Instead: *"[Recipe] calls for [original] — your pantry doesn't have it but you have [substitute] which you've used successfully [N]× — using that."*
+
+**Reinforce high-rated preference changes**
+- When a preference change was last made and the entry had a rating ≥ the recipe's average, note it in the plan: *"Last time you [change] and rated it [N]★ — do that again."*
+
+**Never suggest proven-bad substitutes**
+- If a substitution has `avgRating` below the recipe's average unmodified rating, do not suggest it. Silently omit it from "Known good swap" notes.
+
+**When re-generating a recipe with deviations**
+- Pull in all `suggestPermanentUpdate` preference changes as baked-in steps or ingredient adjustments in the new recipe text.
+- Pull in all `provenSubstitute` swaps as optional variant notes at the bottom of the recipe.
+
+---
+
 ## Recipe Iteration Notes
 
 The webapp stores per-recipe notes in `data/recipe-notes.json`. Read this file before suggesting or regenerating **any** recipe that appears in it.

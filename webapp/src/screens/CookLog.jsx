@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { RefreshCw, PlusCircle, Pencil, Trash2, X, Check } from "lucide-react"
+import { RefreshCw, PlusCircle, Pencil, Trash2, X, Check, PlusSquare, ChevronDown, ChevronUp } from "lucide-react"
 import { useApp } from "../context/AppContext"
 import { getFile, updateFile, listFiles } from "../github/client"
 import {
@@ -11,6 +11,8 @@ import {
   CATEGORIES,
   getCategoryStyle,
   getRecentCategories,
+  serializeDeviations,
+  parseDeviations,
 } from "../utils/cookLogParser"
 import Toast from "../components/Toast"
 import MicButton from "../components/MicButton"
@@ -56,6 +58,12 @@ export default function CookLog() {
   const [formMakeAgain, setFormMakeAgain] = useState(null)
   const [formPrepTime, setFormPrepTime] = useState('')
 
+  // Deviation form state
+  const [devPref, setDevPref] = useState(false)
+  const [devSub, setDevSub] = useState(false)
+  const [prefChanges, setPrefChanges] = useState([{ what: '', why: '' }])
+  const [subs, setSubs] = useState([{ used: '', original: '' }])
+
   // Edit / delete state
   const [editingIndex, setEditingIndex] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
@@ -69,6 +77,7 @@ export default function CookLog() {
   const [recipeNotes, setRecipeNotes] = useState({})      // { recipeName: { iterations: [...] } }
   const [recipeNotesSha, setRecipeNotesSha] = useState(undefined)
   const [expandedNotes, setExpandedNotes] = useState({})  // { entryIndex: bool }
+  const [evolutionRecipe, setEvolutionRecipe] = useState(null)  // recipe name for Evolution modal
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -126,6 +135,60 @@ export default function CookLog() {
     } catch { /* silent — note write failure should not block the main save */ }
   }
 
+  /** Accumulate deviation data into recipe-notes.json */
+  async function upsertDeviations({ recipeName, date, rating, prefs = [], subs: subList = [] }) {
+    if (!prefs.length && !subList.length) return
+    try {
+      // Re-fetch to get latest sha (avoids collision with upsertRecipeNote)
+      let current = structuredClone(recipeNotes)
+      let latestSha = recipeNotesSha
+      try {
+        const { content: fresh, sha: freshSha } = await getFile(repo, NOTES_PATH)
+        current = JSON.parse(fresh || '{}')
+        latestSha = freshSha
+      } catch { /* use in-memory copy */ }
+
+      if (!current[recipeName]) current[recipeName] = {}
+      const rec = current[recipeName]
+
+      // Preference changes
+      if (!rec.preferenceChanges) rec.preferenceChanges = []
+      for (const p of prefs) {
+        const key = p.what.trim().toLowerCase()
+        const existing = rec.preferenceChanges.find(x => x.change.toLowerCase() === key)
+        if (existing) {
+          existing.count = (existing.count || 1) + 1
+          if (rating) existing.lastRating = rating
+          if (existing.count >= 2) existing.suggestPermanentUpdate = true
+        } else {
+          rec.preferenceChanges.push({ change: p.what.trim(), reason: p.why.trim(), count: 1, lastRating: rating || null })
+        }
+      }
+
+      // Substitutions
+      if (!rec.substitutions) rec.substitutions = []
+      for (const s of subList) {
+        const keyUsed = s.used.trim().toLowerCase()
+        const keyOrig = s.original.trim().toLowerCase()
+        const existing = rec.substitutions.find(x => x.usedIngredient.toLowerCase() === keyUsed && x.originalIngredient.toLowerCase() === keyOrig)
+        if (existing) {
+          const prevCount = existing.count || 1
+          existing.count = prevCount + 1
+          if (rating) existing.avgRating = Math.round(((existing.avgRating || rating) * prevCount + rating) / (prevCount + 1) * 10) / 10
+          if (existing.count >= 2 && (existing.avgRating || 0) >= 4) existing.provenSubstitute = true
+        } else {
+          rec.substitutions.push({ usedIngredient: s.used.trim(), originalIngredient: s.original.trim(), count: 1, avgRating: rating || null })
+        }
+      }
+
+      const json = JSON.stringify(current, null, 2)
+      await updateFile(repo, NOTES_PATH, json, latestSha, `Recipe deviations — ${recipeName} ${date}`)
+      const { sha: newSha } = await getFile(repo, NOTES_PATH)
+      setRecipeNotesSha(newSha)
+      setRecipeNotes(current)
+    } catch { /* silent */ }
+  }
+
   const suggestions = recipeName.length > 0
     ? recipeNames.filter(n => n.toLowerCase().includes(recipeName.toLowerCase()))
     : []
@@ -140,6 +203,10 @@ export default function CookLog() {
     setFormRating(0)
     setFormMakeAgain(null)
     setFormPrepTime('')
+    setDevPref(false)
+    setDevSub(false)
+    setPrefChanges([{ what: '', why: '' }])
+    setSubs([{ used: '', original: '' }])
   }
 
   async function handleRecipeSelect(name) {
@@ -174,6 +241,10 @@ export default function CookLog() {
         rating: formRating || '',
         feedback: formFeedback,
         prepTime: formPrepTime ? parseInt(formPrepTime, 10) : '',
+        deviations: (!ateOut && (devPref || devSub)) ? serializeDeviations({
+          prefs: devPref ? prefChanges : [],
+          subs: devSub ? subs : [],
+        }) : '',
       }
       const updated = editingIndex !== null
         ? updateCookLogEntry(rawMarkdown, editingIndex, entry)
@@ -185,6 +256,14 @@ export default function CookLog() {
       // Write iteration note if a note was entered with a rating
       if (!ateOut && formRating && rawNotes) {
         await upsertRecipeNote({ recipeName: mealName, date, rating: formRating, makeAgain: formMakeAgain, noteText: rawNotes })
+      }
+      // Accumulate deviations into recipe-notes.json
+      if (!ateOut && (devPref || devSub)) {
+        await upsertDeviations({
+          recipeName: mealName, date, rating: formRating || null,
+          prefs: devPref ? prefChanges.filter(p => p.what.trim()) : [],
+          subs: devSub ? subs.filter(s => s.used.trim() && s.original.trim()) : [],
+        })
       }
       const { content: fresh, sha: newSha } = await getFile(repo, LOG_PATH)
       setRawMarkdown(fresh)
@@ -211,6 +290,12 @@ export default function CookLog() {
     setFormRating(e.rating || 0)
     setFormMakeAgain(ma)
     setFormPrepTime(e.prepTime ? String(e.prepTime) : '')
+    // Pre-fill deviations
+    const { prefs: ep, subs: es } = parseDeviations(e.deviations || '')
+    setDevPref(ep.length > 0)
+    setDevSub(es.length > 0)
+    setPrefChanges(ep.length > 0 ? ep : [{ what: '', why: '' }])
+    setSubs(es.length > 0 ? es : [{ used: '', original: '' }])
     setEditingIndex(entryIndex)
     setDeleteConfirm(null)
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -421,6 +506,90 @@ export default function CookLog() {
           </div>
         </div>
 
+        {/* How did you make it? — hidden for Ate Out */}
+        {!ateOut && (
+          <div className="border border-gray-200 rounded-xl p-3 space-y-3 bg-gray-50">
+            <p className="text-xs font-semibold text-gray-600">How did you make it?</p>
+            <div className="flex flex-wrap gap-2">
+              <label className="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                <input type="checkbox" checked={devPref} onChange={e => setDevPref(e.target.checked)} className="rounded accent-orange-500" />
+                Preference changes
+              </label>
+              <label className="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer">
+                <input type="checkbox" checked={devSub} onChange={e => setDevSub(e.target.checked)} className="rounded accent-blue-500" />
+                Used substitutes
+              </label>
+            </div>
+
+            {devPref && (
+              <div className="space-y-2">
+                <p className="text-xs text-orange-700 font-medium">Preference changes — what you changed &amp; why</p>
+                {prefChanges.map((row, idx) => (
+                  <div key={idx} className="flex gap-1.5 items-start">
+                    <div className="flex-1 space-y-1">
+                      <input
+                        type="text"
+                        value={row.what}
+                        onChange={e => setPrefChanges(prev => prev.map((r, i) => i === idx ? { ...r, what: e.target.value } : r))}
+                        placeholder="What you changed"
+                        className="w-full text-xs border border-orange-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-400 bg-white"
+                      />
+                      <input
+                        type="text"
+                        value={row.why}
+                        onChange={e => setPrefChanges(prev => prev.map((r, i) => i === idx ? { ...r, why: e.target.value } : r))}
+                        placeholder="Why / notes (optional)"
+                        className="w-full text-xs border border-orange-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-400 bg-white"
+                      />
+                    </div>
+                    {prefChanges.length > 1 && (
+                      <button type="button" onClick={() => setPrefChanges(prev => prev.filter((_, i) => i !== idx))} className="text-gray-400 hover:text-red-400 mt-1 shrink-0"><X size={14} /></button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={() => setPrefChanges(prev => [...prev, { what: '', why: '' }])} className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-800">
+                  <PlusSquare size={13} /> Add another change
+                </button>
+              </div>
+            )}
+
+            {devSub && (
+              <div className="space-y-2">
+                <p className="text-xs text-blue-700 font-medium">Substitutes — what you used &amp; what it replaced</p>
+                {subs.map((row, idx) => (
+                  <div key={idx} className="flex gap-1.5 items-center">
+                    <input
+                      type="text"
+                      value={row.used}
+                      onChange={e => setSubs(prev => prev.map((r, i) => i === idx ? { ...r, used: e.target.value } : r))}
+                      placeholder="Used instead of"
+                      className="flex-1 text-xs border border-blue-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                    />
+                    <span className="text-xs text-gray-400 shrink-0">for</span>
+                    <input
+                      type="text"
+                      value={row.original}
+                      onChange={e => setSubs(prev => prev.map((r, i) => i === idx ? { ...r, original: e.target.value } : r))}
+                      placeholder="In place of"
+                      className="flex-1 text-xs border border-blue-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                    />
+                    {subs.length > 1 && (
+                      <button type="button" onClick={() => setSubs(prev => prev.filter((_, i) => i !== idx))} className="text-gray-400 hover:text-red-400 shrink-0"><X size={14} /></button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={() => setSubs(prev => [...prev, { used: '', original: '' }])} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800">
+                  <PlusSquare size={13} /> Add another substitute
+                </button>
+              </div>
+            )}
+
+            {!devPref && !devSub && (
+              <p className="text-xs text-gray-400 italic">Check a box above to log how you modified the recipe.</p>
+            )}
+          </div>
+        )}
+
         {/* Inline rating */}
         <div className="border-t border-gray-100 pt-3 space-y-2">
           <p className="text-xs text-gray-500 font-medium">How was it? (optional)</p>
@@ -530,10 +699,18 @@ export default function CookLog() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         {entry.notes.startsWith("Ate Out") && <span title="Ate out">🍽️</span>}
-                        <p className="text-sm font-medium text-gray-900 truncate">{entry.recipeName}</p>
+                        <button
+                          type="button"
+                          onClick={() => !entry.notes.startsWith("Ate Out") && setEvolutionRecipe(entry.recipeName)}
+                          className={`text-sm font-medium text-gray-900 truncate text-left ${!entry.notes.startsWith("Ate Out") ? 'hover:text-green-700 hover:underline cursor-pointer' : ''}`}
+                          title={!entry.notes.startsWith("Ate Out") ? "View recipe evolution" : undefined}
+                        >{entry.recipeName}</button>
                       </div>
                       {entry.notes && (
                         <p className="text-xs text-gray-400 mt-0.5 truncate">{entry.notes}</p>
+                      )}
+                      {entry.deviations && (
+                        <DevBadge deviations={entry.deviations} />
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
@@ -684,6 +861,166 @@ export default function CookLog() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
       )}
+
+      {evolutionRecipe && (
+        <EvolutionModal
+          recipeName={evolutionRecipe}
+          entries={entries}
+          recipeNotes={recipeNotes}
+          onClose={() => setEvolutionRecipe(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── DevBadge ────────────────────────────────────────────────────────────────
+function DevBadge({ deviations }) {
+  const [open, setOpen] = useState(false)
+  const { prefs, subs } = parseDeviations(deviations)
+  const total = prefs.length + subs.length
+  if (!total) return null
+  return (
+    <div className="mt-1">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="inline-flex items-center gap-1 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-full px-2 py-0.5 hover:bg-orange-100 transition-colors"
+      >
+        🔧 Modified ({total})
+        <span className="text-orange-400 ml-0.5">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="mt-1.5 pl-2 border-l-2 border-orange-200 space-y-1">
+          {prefs.map((p, i) => (
+            <p key={i} className="text-xs text-gray-600"><span className="font-medium text-orange-600">Change:</span> {p.what}{p.why ? <span className="text-gray-400"> — {p.why}</span> : ''}</p>
+          ))}
+          {subs.map((s, i) => (
+            <p key={i} className="text-xs text-gray-600"><span className="font-medium text-blue-600">Sub:</span> {s.used} <span className="text-gray-400">for</span> {s.original}</p>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── EvolutionModal ───────────────────────────────────────────────────────────
+function EvolutionModal({ recipeName, entries, recipeNotes, onClose }) {
+  const [copied, setCopied] = useState(false)
+  const cookEntries = entries.filter(e => e.recipeName === recipeName && !e.notes.startsWith('Ate Out'))
+  const cookCount = cookEntries.length
+  const ratings = cookEntries.map(e => e.rating).filter(Boolean)
+  const avgRating = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null
+  const rn = recipeNotes[recipeName] || {}
+  const prefChanges = rn.preferenceChanges || []
+  const subs = rn.substitutions || []
+
+  function buildSuggestedUpdate() {
+    const lines = [`Suggested updates for: ${recipeName}`, '']
+    const highFreqPrefs = prefChanges.filter(p => (p.count || 1) >= 2)
+    if (highFreqPrefs.length) {
+      lines.push('Permanent preference changes to apply:')
+      highFreqPrefs.forEach(p => lines.push(`  • ${p.change}${p.reason ? ' (' + p.reason + ')' : ''} — made ${p.count}× ${p.lastRating ? '(last rated ' + p.lastRating + '★)' : ''}`))
+      lines.push('')
+    }
+    const provenSubs = subs.filter(s => s.provenSubstitute)
+    if (provenSubs.length) {
+      lines.push('Proven substitutes to note in recipe:')
+      provenSubs.forEach(s => lines.push(`  • Use ${s.usedIngredient} instead of ${s.originalIngredient} (${s.count}× tried, avg ${s.avgRating}★)`))
+    }
+    return lines.join('\n')
+  }
+
+  function copySuggestion() {
+    navigator.clipboard.writeText(buildSuggestedUpdate()).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500) })
+  }
+
+  const hasHighFreqPref = prefChanges.some(p => (p.count || 1) >= 2)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40" onClick={onClose}>
+      <div
+        className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-base font-bold text-gray-900">{recipeName}</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Recipe Evolution</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1"><X size={18} /></button>
+        </div>
+
+        {/* Summary row */}
+        <div className="flex gap-3">
+          <div className="flex-1 bg-green-50 border border-green-200 rounded-xl px-3 py-2 text-center">
+            <p className="text-lg font-bold text-green-700">{cookCount}</p>
+            <p className="text-xs text-gray-500">times cooked</p>
+          </div>
+          <div className="flex-1 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-center">
+            <p className="text-lg font-bold text-amber-700">{avgRating ? `${avgRating}★` : '—'}</p>
+            <p className="text-xs text-gray-500">avg rating</p>
+          </div>
+        </div>
+
+        {/* Preference changes */}
+        {prefChanges.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-orange-700 mb-2">Preference changes logged</p>
+            <div className="space-y-2">
+              {prefChanges.map((p, i) => (
+                <div key={i} className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium text-gray-800">{p.change}</span>
+                    <span className="shrink-0 text-orange-600 font-semibold">×{p.count || 1}</span>
+                  </div>
+                  {p.reason && <p className="text-gray-500 mt-0.5">{p.reason}</p>}
+                  {p.lastRating && <p className="text-amber-600 mt-0.5">Last rated {p.lastRating}★</p>}
+                  {p.suggestPermanentUpdate && (
+                    <p className="mt-1 text-orange-700 font-semibold">⚠️ Made this change {p.count}× — consider updating the recipe</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Substitutions */}
+        {subs.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-blue-700 mb-2">Substitutions logged</p>
+            <div className="space-y-2">
+              {subs.map((s, i) => (
+                <div key={i} className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-xs">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium text-gray-800">{s.usedIngredient} <span className="text-gray-400">for</span> {s.originalIngredient}</span>
+                    <span className="shrink-0 text-blue-600 font-semibold">×{s.count || 1}</span>
+                  </div>
+                  {s.avgRating && <p className="text-amber-600 mt-0.5">Avg rating when used: {s.avgRating}★</p>}
+                  {s.provenSubstitute && (
+                    <p className="mt-1 text-blue-700 font-semibold">✅ Proven substitute — works well</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {prefChanges.length === 0 && subs.length === 0 && (
+          <p className="text-sm text-gray-400 italic text-center py-4">No deviations logged yet for this recipe.</p>
+        )}
+
+        {/* Suggest update button */}
+        {hasHighFreqPref && (
+          <button
+            type="button"
+            onClick={copySuggestion}
+            className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-xl py-2.5 transition-colors"
+          >
+            {copied ? '✔️ Copied!' : '📋 Suggest recipe update'}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
