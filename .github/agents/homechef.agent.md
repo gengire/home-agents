@@ -374,7 +374,7 @@ Before generating any meal plan, read `data/weekly-reviews.md` (if it exists and
 - **Planned vs Cooked mismatches** (🔄 rows): if a meal was skipped or swapped multiple weeks in a row, deprioritize it or ask why before re-scheduling.
 - **Unlogged days** (❌ rows): if most days show "not logged" the family may have been eating out — check before planning a heavy batch week.
 - **Ratings from review**: cross-reference with cook-log.md ratings for the same period.
-- **Notes for HomeChef** section: any explicit carryover requests (e.g. "carry Saag Chicken — still have ingredients") must be honoured in the next plan.
+- **Notes for HomeChef** section: any explicit carryover requests (e.g. "carry Saag Chicken — still have ingredients") must be honoured in the next plan. Schedule the carried-over meal in the first available slot that fits its category rotation rules, and note which ingredients are already on hand so they don't appear on the shopping list.
 
 ### Format
 Each review is an `## Week of ...` block. Read all blocks from the last 4 weeks. Do not read older entries unless asked.

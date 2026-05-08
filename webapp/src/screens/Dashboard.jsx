@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { RefreshCw, ChefHat, ShoppingBasket, CalendarDays, Wrench, AlertTriangle, CheckCircle2, ClipboardList, ChevronDown, ChevronUp } from "lucide-react"
+import { RefreshCw, ChefHat, ShoppingBasket, CalendarDays, Wrench, AlertTriangle, CheckCircle2, ClipboardList, ChevronDown, ChevronUp, Recycle } from "lucide-react"
 import { useApp } from "../context/AppContext"
-import { getFile, updateFile } from "../github/client"
+import { getFile, updateFile, listFiles } from "../github/client"
 import { parseCookLog, CATEGORIES, getCategoryStyle, getRecentCategories } from "../utils/cookLogParser"
 import { parseMealPlan, getDayRecipeName } from "../utils/mealPlanParser"
 import { parseMaintenance, isOverdue } from "../utils/maintenanceParser"
+import { parsePantry } from "../utils/pantryParser"
 import Toast from "../components/Toast"
 
 const REVIEW_PATH = 'data/weekly-reviews.md'
@@ -116,6 +117,13 @@ export default function Dashboard() {
   const [reviewSaved, setReviewSaved] = useState(false)
   const [toast, setToast] = useState(null)
 
+  // Ingredient recycling state
+  const [pantryItems, setPantryItems] = useState([])       // flat lowercase strings
+  const [recipeFileMap, setRecipeFileMap] = useState({})   // recipeName -> filename
+  const [recycleOpen, setRecycleOpen] = useState({})       // rowIndex -> bool
+  const [recycleData, setRecycleData] = useState({})       // rowIndex -> {loading, ingredients, matches}
+  const [copied, setCopied] = useState(null)               // rowIndex that was just copied
+
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -195,7 +203,21 @@ export default function Dashboard() {
       if (pantryFile) {
         const match = pantryFile.content.match(/\*\*Last updated:\*\*\s*(.+)/)
         setPantryUpdated(match ? match[1].trim() : '')
+        const parsed = parsePantry(pantryFile.content)
+        const flat = parsed.sections.flatMap(s => s.items.map(i => i.toLowerCase()))
+        setPantryItems(flat)
       }
+
+      // Load recipe file map for ingredient recycling
+      try {
+        const recipeFiles = await listFiles(repo, 'recipes')
+        const map = {}
+        recipeFiles.filter(f => f.name.endsWith('.txt')).forEach(f => {
+          const display = f.name.replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/\.txt$/, '').replace(/_/g, ' ')
+          map[display.toLowerCase()] = f.name
+        })
+        setRecipeFileMap(map)
+      } catch { /* recipes dir missing - ok */ }
     } catch (e) {
       setError(e.message)
     } finally {
@@ -204,6 +226,54 @@ export default function Dashboard() {
   }, [repo])
 
   useEffect(() => { load() }, [load])
+
+  async function loadRecycleData(rowIndex, plannedName) {
+    setRecycleData(prev => ({ ...prev, [rowIndex]: { loading: true, ingredients: [], matches: [] } }))
+    try {
+      const filename = recipeFileMap[plannedName.toLowerCase()]
+      if (!filename) {
+        setRecycleData(prev => ({ ...prev, [rowIndex]: { loading: false, ingredients: [], matches: [] } }))
+        return
+      }
+      const { content } = await getFile(repo, `recipes/${filename}`)
+      // Extract ingredients section
+      const ingStart = content.indexOf('Ingredients:')
+      const ingEnd = content.indexOf('Directions:', ingStart)
+      const ingBlock = ingStart !== -1
+        ? content.slice(ingStart + 'Ingredients:'.length, ingEnd !== -1 ? ingEnd : undefined)
+        : ''
+      const ingredients = ingBlock
+        .split('\n')
+        .map(l => l.replace(/^\s*[-*\d.]+\s*/, '').trim())
+        .filter(Boolean)
+        .map(l => {
+          // Extract first 1-2 meaningful words before comma/paren as the ingredient token
+          return l.replace(/[,(\d].*$/, '').trim().toLowerCase()
+        })
+        .filter(l => l.length > 2)
+
+      // Cross-reference against pantry
+      const matches = ingredients.filter(ing =>
+        pantryItems.some(p => p.includes(ing) || ing.includes(p.split(' ')[0]))
+      )
+      setRecycleData(prev => ({ ...prev, [rowIndex]: { loading: false, ingredients, matches } }))
+    } catch {
+      setRecycleData(prev => ({ ...prev, [rowIndex]: { loading: false, ingredients: [], matches: [] } }))
+    }
+  }
+
+  function toggleRecycle(rowIndex, plannedName) {
+    const opening = !recycleOpen[rowIndex]
+    setRecycleOpen(prev => ({ ...prev, [rowIndex]: opening }))
+    if (opening && !recycleData[rowIndex]) {
+      loadRecycleData(rowIndex, plannedName)
+    }
+  }
+
+  function copyCarryover(recipeName) {
+    const msg = `Carry over "${recipeName}" to next week — we still have the ingredients.`
+    navigator.clipboard?.writeText(msg).catch(() => {})
+  }
 
   async function saveReview() {
     setReviewSaving(true)
@@ -389,27 +459,75 @@ export default function Dashboard() {
               <p className="text-sm text-gray-400 italic">No meal plan data available.</p>
             ) : (
               <div className="space-y-2">
-                {reviewRows.map((row, i) => (
-                  <div key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-base leading-5 shrink-0">
-                      {row.status === 'match' ? '✅' : row.status === 'diff' ? '🔄' : '❌'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-1.5 flex-wrap">
-                        <span className="font-medium text-gray-800">{row.dayName}</span>
-                        {row.isNewCook && <span className="text-xs text-green-600">🍳 cook</span>}
+                {reviewRows.map((row, i) => {
+                  const canRecycle = row.status !== 'match' && row.planned
+                  const rd = recycleData[i]
+                  return (
+                    <div key={i} className="rounded-xl border border-gray-100 overflow-hidden">
+                      <div className="flex items-start gap-2 text-sm p-2">
+                        <span className="text-base leading-5 shrink-0 pt-0.5">
+                          {row.status === 'match' ? '✅' : row.status === 'diff' ? '🔄' : '❌'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline gap-1.5 flex-wrap">
+                            <span className="font-medium text-gray-800">{row.dayName}</span>
+                            {row.isNewCook && <span className="text-xs text-green-600">🍳 cook</span>}
+                          </div>
+                          <p className="text-xs text-gray-500 truncate">
+                            {row.planned ? `Planned: ${row.planned}` : 'No plan'}
+                            {row.cooked && row.status === 'diff' && ` → Made: ${row.cooked}`}
+                            {!row.cooked && ' → Not logged'}
+                          </p>
+                          {row.rating > 0 && (
+                            <p className="text-xs text-amber-500">{'\u2605'.repeat(row.rating)}{'\u2606'.repeat(5 - row.rating)}</p>
+                          )}
+                        </div>
+                        {canRecycle && (
+                          <button
+                            type="button"
+                            onClick={() => toggleRecycle(i, row.planned)}
+                            className="shrink-0 flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800 px-2 py-1 rounded-lg hover:bg-teal-50 border border-teal-200 transition-colors"
+                            title="Check which ingredients you still have"
+                          >
+                            <Recycle size={11} />
+                            <span>Recycle</span>
+                          </button>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-500 truncate">
-                        {row.planned ? `Planned: ${row.planned}` : 'No plan'}
-                        {row.cooked && row.status === 'diff' && ` → Made: ${row.cooked}`}
-                        {!row.cooked && ' → Not logged'}
-                      </p>
-                      {row.rating > 0 && (
-                        <p className="text-xs text-amber-500">{'\u2605'.repeat(row.rating)}{'\u2606'.repeat(5 - row.rating)}</p>
+
+                      {canRecycle && recycleOpen[i] && (
+                        <div className="border-t border-gray-100 bg-teal-50 px-3 py-2 text-xs space-y-1.5">
+                          {rd?.loading && (
+                            <p className="text-teal-600 flex items-center gap-1"><RefreshCw size={10} className="animate-spin" /> Checking pantry…</p>
+                          )}
+                          {rd && !rd.loading && rd.matches.length > 0 && (
+                            <>
+                              <p className="text-teal-700 font-medium">You likely still have:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {rd.matches.map(m => (
+                                  <span key={m} className="bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full capitalize">{m}</span>
+                                ))}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => { copyCarryover(row.planned); setCopied(i); setTimeout(() => setCopied(null), 2500) }}
+                                className="mt-1 flex items-center gap-1.5 text-xs bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                {copied === i ? '✔️ Copied!' : '📋 Copy carry-over note for HomeChef'}
+                              </button>
+                            </>
+                          )}
+                          {rd && !rd.loading && rd.matches.length === 0 && rd.ingredients.length > 0 && (
+                            <p className="text-gray-500">No pantry matches found for this recipe.</p>
+                          )}
+                          {rd && !rd.loading && rd.ingredients.length === 0 && (
+                            <p className="text-gray-500">Recipe file not found — can’t check ingredients.</p>
+                          )}
+                        </div>
                       )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
