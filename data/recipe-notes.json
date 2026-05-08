@@ -1,1 +1,31 @@
-{}
+{
+  "Black Bean and Sweet Potato Enchilada Casserole": {
+    "preferenceChanges": [
+      {
+        "change": "Used the full can (20 oz) of enchillada sauce",
+        "reason": "",
+        "count": 1,
+        "lastRating": 4
+      },
+      {
+        "change": "Added Greek yogurt topping",
+        "reason": "",
+        "count": 1,
+        "lastRating": 4
+      },
+      {
+        "change": "Added fresh mango",
+        "reason": "",
+        "count": 1,
+        "lastRating": 4
+      },
+      {
+        "change": "Added fresh avocado slices topping",
+        "reason": "",
+        "count": 1,
+        "lastRating": 4
+      }
+    ],
+    "substitutions": []
+  }
+}
