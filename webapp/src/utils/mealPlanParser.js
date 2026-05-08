@@ -85,6 +85,23 @@ export function parseMealPlan(markdown) {
 }
 
 /**
+ * Extract just the recipe name from a parsed day object.
+ * Looks for the "Dinner:" line and strips category/time annotations.
+ * Returns null if not found.
+ */
+export function getDayRecipeName(day) {
+  if (!day) return null
+  const dinnerLine = day.lines.find(l => l.toLowerCase().includes('dinner:'))
+  const src = dinnerLine || day.lines.find(l => l.trim())
+  if (!src) return null
+  return src
+    .replace(/^\s*[-*]?\s*\*?\*?Dinner:\*?\*?\s*/i, '')
+    .replace(/\s*\|.*$/, '')
+    .replace(/\*\*/g, '')
+    .trim() || null
+}
+
+/**
  * Parse a single day's line array into labelled fields for display.
  * Lines look like:
  *   **Dinner:** Saag Chicken | `IND-P` | ~60 min

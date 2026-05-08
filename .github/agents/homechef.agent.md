@@ -366,6 +366,21 @@ The cook log includes an optional **Prep (min)** column (col 7). Use it to calib
 
 ---
 
+## Weekly Review
+
+Before generating any meal plan, read `data/weekly-reviews.md` (if it exists and has entries).
+
+### What to extract
+- **Planned vs Cooked mismatches** (🔄 rows): if a meal was skipped or swapped multiple weeks in a row, deprioritize it or ask why before re-scheduling.
+- **Unlogged days** (❌ rows): if most days show "not logged" the family may have been eating out — check before planning a heavy batch week.
+- **Ratings from review**: cross-reference with cook-log.md ratings for the same period.
+- **Notes for HomeChef** section: any explicit carryover requests (e.g. "carry Saag Chicken — still have ingredients") must be honoured in the next plan.
+
+### Format
+Each review is an `## Week of ...` block. Read all blocks from the last 4 weeks. Do not read older entries unless asked.
+
+---
+
 ## Pantry Burn-Down Mode
 
 If the user says "use what we have" or "pantry mode": build the plan from `data/pantry-inventory.md` first. Flag which meals need zero shopping vs. a few additions.

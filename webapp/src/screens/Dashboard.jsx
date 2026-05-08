@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { RefreshCw, ChefHat, ShoppingBasket, CalendarDays, Wrench, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { RefreshCw, ChefHat, ShoppingBasket, CalendarDays, Wrench, AlertTriangle, CheckCircle2, ClipboardList, ChevronDown, ChevronUp } from "lucide-react"
 import { useApp } from "../context/AppContext"
-import { getFile } from "../github/client"
+import { getFile, updateFile } from "../github/client"
 import { parseCookLog, CATEGORIES, getCategoryStyle, getRecentCategories } from "../utils/cookLogParser"
-import { parseMealPlan } from "../utils/mealPlanParser"
+import { parseMealPlan, getDayRecipeName } from "../utils/mealPlanParser"
 import { parseMaintenance, isOverdue } from "../utils/maintenanceParser"
+import Toast from "../components/Toast"
 
+const REVIEW_PATH = 'data/weekly-reviews.md'
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 function todayDayName() {
@@ -105,6 +107,15 @@ export default function Dashboard() {
   const [pantryUpdated, setPantryUpdated] = useState('')
   const [error, setError] = useState(null)
 
+  // Weekly review state
+  const isSunday = new Date().getDay() === 0
+  const [reviewOpen, setReviewOpen] = useState(isSunday)
+  const [reviewRows, setReviewRows] = useState([])
+  const [weekOf, setWeekOf] = useState('')
+  const [reviewSaving, setReviewSaving] = useState(false)
+  const [reviewSaved, setReviewSaved] = useState(false)
+  const [toast, setToast] = useState(null)
+
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -123,6 +134,50 @@ export default function Dashboard() {
         setTodayDinner(getDayLabel(today))
         setTomorrowDinner(getDayLabel(tomorrow))
         setTodayIsNew(today?.isNewCook ?? false)
+        setWeekOf(plan.weekOf || '')
+
+        // Build review rows: one per planned day
+        if (cookFile) {
+          const entries = parseCookLog(cookFile.content)
+          const rows = plan.days.map(day => {
+            const planned = getDayRecipeName(day)
+            // Find a log entry whose date falls in this week that matches the day name
+            // Best effort: match by day heading name
+            const dayName = day.heading.split(',')[0].trim() // "Sunday", "Monday", etc.
+            const dayIdx = DAY_NAMES.indexOf(dayName)
+            // Find the log entry on the date that corresponds to this day within the plan week
+            // Parse week start from weekOf string (e.g. "May 3–9, 2026")
+            let loggedEntry = null
+            if (plan.weekOf) {
+              const yearMatch = plan.weekOf.match(/(\d{4})/)
+              const startMatch = plan.weekOf.match(/(\w+ \d+)/)
+              if (yearMatch && startMatch) {
+                const startDate = new Date(`${startMatch[1]}, ${yearMatch[1]}`)
+                if (!isNaN(startDate)) {
+                  // Find which calendar date in the plan week matches this day name
+                  for (let offset = 0; offset < 7; offset++) {
+                    const d = new Date(startDate)
+                    d.setDate(startDate.getDate() + offset)
+                    if (d.getDay() === dayIdx) {
+                      const iso = d.toISOString().slice(0, 10)
+                      const match = entries.filter(e => e.date === iso)
+                        .find(e => !e.notes.startsWith('Leftovers'))
+                      if (match) loggedEntry = match
+                      break
+                    }
+                  }
+                }
+              }
+            }
+            const cooked = loggedEntry ? loggedEntry.recipeName : null
+            let status = 'unlogged'
+            if (cooked) {
+              status = planned && cooked.toLowerCase() === planned.toLowerCase() ? 'match' : 'diff'
+            }
+            return { dayName, isNewCook: day.isNewCook, planned, cooked, status, rating: loggedEntry?.rating || null, notes: loggedEntry?.notes || '' }
+          })
+          setReviewRows(rows)
+        }
       }
 
       if (cookFile) {
@@ -149,6 +204,64 @@ export default function Dashboard() {
   }, [repo])
 
   useEffect(() => { load() }, [load])
+
+  async function saveReview() {
+    setReviewSaving(true)
+    try {
+      const date = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      const ratedRows = reviewRows.filter(r => r.rating)
+      const avgRating = ratedRows.length
+        ? (ratedRows.reduce((s, r) => s + r.rating, 0) / ratedRows.length).toFixed(1)
+        : null
+      const tableRows = reviewRows.map(r => {
+        const icon = r.status === 'match' ? '✅' : r.status === 'diff' ? '🔄' : '❌'
+        const cooked = r.cooked || '(not logged)'
+        return `| ${r.dayName} | ${r.planned || '—'} | ${cooked} | ${icon} |`
+      }).join('\n')
+      const notesLines = reviewRows
+        .filter(r => r.notes && !r.notes.startsWith('Leftovers') && !r.notes.startsWith('Ate Out'))
+        .map(r => `- ${r.dayName}: ${r.notes}`)
+        .join('\n')
+
+      const block = [
+        `## Week of ${weekOf}`,
+        `**Generated:** ${date}`,
+        '',
+        '### Planned vs Cooked',
+        '| Day | Planned | Cooked | Match |',
+        '|-----|---------|--------|-------|',
+        tableRows,
+        '',
+        '### Ratings',
+        avgRating ? `Average this week: ${avgRating}/5` : 'No meals rated this week.',
+        ...ratedRows.map(r => `- ${r.cooked || r.planned}: ${r.rating}★`),
+        '',
+        '### Notes for HomeChef',
+        notesLines || '(none)',
+        '',
+        '---',
+        '',
+      ].join('\n')
+
+      // Load current file (or create if missing)
+      let sha = undefined
+      let existing = ''
+      try {
+        const f = await getFile(repo, REVIEW_PATH)
+        sha = f.sha
+        existing = f.content
+      } catch { /* file doesn't exist yet — create it */ }
+
+      const header = existing || '# Weekly Reviews \u2014 HomeChef Reference Log\n**Purpose:** Append-only weekly summaries.\n\n---\n\n'
+      await updateFile(repo, REVIEW_PATH, header + block, sha, `Weekly review — ${weekOf}`)
+      setReviewSaved(true)
+      setToast({ message: '✅ Review saved! HomeChef will use this for next week\'s plan.', type: 'success' })
+    } catch {
+      setToast({ message: '❌ Failed to save review.', type: 'error' })
+    } finally {
+      setReviewSaving(false)
+    }
+  }
 
   const availableCategories = CATEGORIES.filter(c => !coolingDown.includes(c.code))
 
@@ -254,11 +367,74 @@ export default function Dashboard() {
       {/* Maintenance Alerts */}
       {maintenance && <OverdueAlerts maintenance={maintenance} />}
 
+      {/* Weekly Review */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setReviewOpen(v => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <ClipboardList size={16} className="text-purple-600" />
+            <span className="text-sm font-semibold text-gray-700">Weekly Review</span>
+            {isSunday && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">Review day!</span>}
+            {weekOf && <span className="text-xs text-gray-400">{weekOf}</span>}
+          </div>
+          {reviewOpen ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
+        </button>
+
+        {reviewOpen && (
+          <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+            {reviewRows.length === 0 ? (
+              <p className="text-sm text-gray-400 italic">No meal plan data available.</p>
+            ) : (
+              <div className="space-y-2">
+                {reviewRows.map((row, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm">
+                    <span className="text-base leading-5 shrink-0">
+                      {row.status === 'match' ? '✅' : row.status === 'diff' ? '🔄' : '❌'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="font-medium text-gray-800">{row.dayName}</span>
+                        {row.isNewCook && <span className="text-xs text-green-600">🍳 cook</span>}
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">
+                        {row.planned ? `Planned: ${row.planned}` : 'No plan'}
+                        {row.cooked && row.status === 'diff' && ` → Made: ${row.cooked}`}
+                        {!row.cooked && ' → Not logged'}
+                      </p>
+                      {row.rating > 0 && (
+                        <p className="text-xs text-amber-500">{'\u2605'.repeat(row.rating)}{'\u2606'.repeat(5 - row.rating)}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {reviewRows.length > 0 && (
+              <button
+                type="button"
+                onClick={saveReview}
+                disabled={reviewSaving || reviewSaved}
+                className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl py-2.5 transition-colors"
+              >
+                {reviewSaving ? <RefreshCw size={14} className="animate-spin" /> : <ClipboardList size={14} />}
+                {reviewSaved ? '✔️ Saved for HomeChef' : reviewSaving ? 'Saving…' : 'Save Review for HomeChef'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
+
+      {toast && <Toast {...toast} onDismiss={() => setToast(null)} />}
     </div>
   )
 }
