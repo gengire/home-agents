@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { RefreshCw, PlusCircle, Pencil, Trash2, X, Check, PlusSquare, ChevronDown, ChevronUp } from "lucide-react"
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { useApp } from "../context/AppContext"
 import { getFile, updateFile, listFiles } from "../github/client"
 import {
@@ -858,6 +859,9 @@ export default function CookLog() {
         )}
       </div>
 
+      {/* Cuisine Diversity Donut */}
+      <CuisineDiversityDonut entries={entries} />
+
       {toast && (
         <Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
       )}
@@ -869,6 +873,130 @@ export default function CookLog() {
           recipeNotes={recipeNotes}
           onClose={() => setEvolutionRecipe(null)}
         />
+      )}
+    </div>
+  )
+}
+
+// ── Cuisine Diversity Donut ────────────────────────────────────────────────
+
+// Map category color tokens to recharts-compatible hex colors
+const CATEGORY_HEX = {
+  orange: '#f97316',
+  blue:   '#3b82f6',
+  indigo: '#6366f1',
+  green:  '#10b981',
+  purple: '#8b5cf6',
+  teal:   '#14b8a6',
+  cyan:   '#06b6d4',
+  brown:  '#d97706',
+  yellow: '#eab308',
+  red:    '#ef4444',
+  lime:   '#84cc16',
+  rose:   '#f43f5e',
+  violet: '#7c3aed',
+  pink:   '#ec4899',
+}
+
+function CuisineDiversityDonut({ entries }) {
+  const [open, setOpen] = useState(true)
+
+  // Last 30 days
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - 30)
+  const recent = entries.filter(e => new Date(e.date) >= cutoff)
+
+  if (recent.length < 2) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 p-4">
+        <h3 className="text-sm font-semibold text-gray-800 mb-1">Cuisine Diversity (30 days)</h3>
+        <p className="text-xs text-gray-400 italic">Keep logging — your cuisine breakdown will appear here after a few meals.</p>
+      </div>
+    )
+  }
+
+  // Tally by category
+  const counts = {}
+  recent.forEach(e => {
+    const code = e.category || 'UNKN'
+    counts[code] = (counts[code] || 0) + 1
+  })
+  const total = recent.length
+  const data = Object.entries(counts)
+    .map(([code, count]) => {
+      const cat = CATEGORIES.find(c => c.code === code)
+      const hex = cat ? (CATEGORY_HEX[cat.color] || '#94a3b8') : '#94a3b8'
+      const pct = Math.round((count / total) * 100)
+      return { code, label: cat ? cat.label : code, count, pct, hex }
+    })
+    .sort((a, b) => b.count - a.count)
+
+  const overLimit = data.filter(d => d.pct > 40)
+
+  const renderLabel = ({ cx, cy, midAngle, outerRadius, pct, code }) => {
+    if (pct < 8) return null
+    const RADIAN = Math.PI / 180
+    const r = outerRadius + 18
+    const x = cx + r * Math.cos(-midAngle * RADIAN)
+    const y = cy + r * Math.sin(-midAngle * RADIAN)
+    return (
+      <text x={x} y={y} fill="#374151" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={11} fontWeight={600}>
+        {code} {pct}%
+      </text>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-4">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <h3 className="text-sm font-semibold text-gray-800">Cuisine Diversity (30 days)</h3>
+        {open ? <ChevronUp size={15} className="text-gray-400" /> : <ChevronDown size={15} className="text-gray-400" />}
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-3">
+          {overLimit.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-800">
+              ⚠️ {overLimit.map(d => `${d.code} makes up ${d.pct}% of your meals this month`).join(' · ')} — try mixing in something new.
+            </div>
+          )}
+          <p className="text-xs text-gray-400">{total} meals logged · last 30 days</p>
+          <ResponsiveContainer width="100%" height={230}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={55}
+                outerRadius={85}
+                paddingAngle={2}
+                dataKey="count"
+                labelLine={false}
+                label={renderLabel}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.hex} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value, name, props) => [`${props.payload.count} meals (${props.payload.pct}%)`, props.payload.label]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          {/* Legend */}
+          <div className="flex flex-wrap gap-1.5">
+            {data.map(d => (
+              <span key={d.code} className="flex items-center gap-1 text-xs text-gray-600">
+                <span className="inline-block w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.hex }} />
+                {d.code}
+              </span>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )
