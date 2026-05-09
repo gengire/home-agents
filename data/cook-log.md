@@ -37,4 +37,10 @@ HomeChef will append rows in the format below.
 | `SOUP` | Soup/Stew |
 | `FISH` | Fish/Seafood |
 | `AMER` | American Comfort |
+| `AMER-S` | American Southern |
+| `ITA` | Italian |
+| `MED-G` | Greek/Middle Eastern |
+| `CARIB` | Caribbean |
+| `ETH` | Ethiopian |
+| `FUSE` | Fusion |
 | `DESS` | Dessert |

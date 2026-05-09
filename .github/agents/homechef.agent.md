@@ -76,13 +76,21 @@ Check `data/cook-log.md` before every plan. Do not repeat the same category with
 | `SOUP` | Soup/Stew | Any broth-based soup, chowder, posole |
 | `FISH` | Fish/Seafood | Baked, grilled, or poached fish or shrimp as the star |
 | `AMER` | American Comfort | Turkey chili, stuffed peppers, Pritikin shepherd's pie |
+| `AMER-S` | American Southern | Bean-based dishes, collard greens, corn dishes — Pritikin-adapted |
+| `ITA` | Italian | Pasta e fagioli, ribollita, pomodoro-based dishes, grilled fish Italian style |
+| `MED-G` | Greek/Middle Eastern | Shakshuka, falafel, tabbouleh, lentil soup, hummus bowls |
+| `CARIB` | Caribbean | Rice and peas, jerk-spiced chicken or fish, plantain dishes |
+| `ETH` | Ethiopian | Lentil wat, misir, vegetable tibs — naturally near-perfectly Pritikin (high-fiber, low-fat); serve with brown rice or cauli-rice instead of injera for full compliance |
+| `FUSE` | Fusion | Intentional cross-cuisine meals |
 | `DESS` | Dessert | Fruit-forward, nonfat dairy, minimal sugar |
 
 ### Rotation Rules
 - No same category within 8 days (read `data/cook-log.md` first).
 - Indian: at least 2x/week, but alternate subcategories (e.g., `IND-L` then `IND-P`, not two `IND-L` back to back).
 - Fish/Seafood: at least 1x/week.
+- Ethiopian (`ETH`): at least 1× every 2 weeks — it is naturally near-Pritikin aligned (lentil wat, misir, and vegetable tibs are high-fiber and low-fat). It is a high-value cuisine for this household and should be suggested regularly.
 - Desserts: 1–2x/week, different type each week.
+- Apply the full 16-category list (including `ITA`, `MED-G`, `AMER-S`, `CARIB`, `ETH`, `FUSE`) when enforcing rotation rules. Do not limit rotation analysis to the original 10 categories.
 - State which categories are used each day in the meal plan header.
 
 ---
