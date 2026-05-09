@@ -454,7 +454,7 @@ The cook log includes an optional **Prep (min)** column (col 7). Use it to calib
 
 ## Weekly Review
 
-Before generating any meal plan, read `data/weekly-reviews.md` (if it exists and has entries).
+Before generating any meal plan, read `data/weekly-reviews.md` (if it exists and has entries). If the most recent entry contains a flagged nutrient — for example "sodium trending up" or "fiber is the nutrient most often missing its target" — explicitly address it in the new plan by selecting or adjusting recipes that correct that gap.
 
 ### What to extract
 - **Planned vs Cooked mismatches** (🔄 rows): if a meal was skipped or swapped multiple weeks in a row, deprioritize it or ask why before re-scheduling.
