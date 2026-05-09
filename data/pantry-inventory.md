@@ -1,9 +1,9 @@
 # Pantry & Fridge Inventory
-**Last updated:** May 4, 2026
+**Last updated:** May 9, 2026
 
 **Proteins:**
 - Tilapia fillets (frozen — use this week)
-- Enrichilada Sauce
+- ⬜ Enrichilada Sauce
 - Enrichilada Sauce
 
 **Vegetables:**
