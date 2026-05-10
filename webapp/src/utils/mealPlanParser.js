@@ -56,8 +56,8 @@ export function parseMealPlan(markdown) {
       section = 'day'
       continue
     }
-    // Skip horizontal rules and empty section headings
-    if (line.startsWith('---') || line.startsWith('## Categories') || line.startsWith('## Serving') || line.startsWith('## Pantry')) continue
+    // Skip horizontal rules and non-display section headings — reset section so their content is not leaked
+    if (line.startsWith('---') || line.startsWith('## Categories') || line.startsWith('## Serving') || line.startsWith('## Pantry') || line.startsWith('## The Week')) { section = null; continue }
 
     if (section === 'prep') prepStrategy.push(line)
     else if (section === 'day' && currentDay) currentDay.lines.push(line)

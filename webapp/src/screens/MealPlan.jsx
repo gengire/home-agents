@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { RefreshCw, ChefHat, Repeat2, CalendarDays } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { useApp } from "../context/AppContext"
 import { getFile } from "../github/client"
 import {
@@ -120,19 +122,13 @@ export default function MealPlan() {
       {/* Prep Strategy banner */}
       {plan.prepStrategy && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
-          <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1.5">Prep Strategy</p>
-          {plan.prepStrategy.split("\n").filter(l => l.trim()).map((line, i) => {
-            // Bold headings like "**Sunday (today...):**"
-            const headingMatch = line.match(/^\*\*(.+)\*\*:?$/)
-            if (headingMatch) return (
-              <p key={i} className="text-xs font-semibold text-amber-800 mt-2">{headingMatch[1]}</p>
-            )
-            // Bullet items
-            if (line.startsWith("- ")) return (
-              <p key={i} className="text-xs text-amber-700 ml-2">• {line.slice(2)}</p>
-            )
-            return <p key={i} className="text-xs text-amber-700">{line}</p>
-          })}
+          <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">Prep Strategy</p>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            className="prose prose-sm max-w-none prose-headings:text-amber-800 prose-p:text-amber-700 prose-li:text-amber-700 prose-strong:text-amber-800 prose-table:text-amber-700"
+          >
+            {plan.prepStrategy}
+          </ReactMarkdown>
         </div>
       )}
 
@@ -145,18 +141,12 @@ export default function MealPlan() {
       {plan.desserts && (
         <div className="bg-pink-50 border border-pink-200 rounded-2xl px-4 py-3">
           <p className="text-xs font-bold text-pink-700 uppercase tracking-wide mb-2">Desserts This Week</p>
-          {plan.desserts.split("\n").filter(l => l.trim() && !l.startsWith("|---")).map((line, i) => {
-            if (line.startsWith("|") && !line.includes("When")) {
-              const cols = line.split("|").map(c => c.trim()).filter(Boolean)
-              if (cols.length >= 3) return (
-                <div key={i} className="flex items-baseline gap-2 mt-1">
-                  <span className="text-xs font-semibold text-pink-700 w-16 flex-shrink-0">{cols[0]}</span>
-                  <span className="text-xs text-pink-800">{cols[1]}</span>
-                </div>
-              )
-            }
-            return null
-          })}
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            className="prose prose-sm max-w-none prose-p:text-pink-700 prose-li:text-pink-700 prose-strong:text-pink-800 prose-table:text-pink-700"
+          >
+            {plan.desserts}
+          </ReactMarkdown>
         </div>
       )}
 
@@ -171,16 +161,13 @@ export default function MealPlan() {
             <span className="text-gray-400 text-xs">{showShopping ? "▲ hide" : "▼ show"}</span>
           </button>
           {showShopping && (
-            <div className="px-4 pb-4 space-y-1 border-t border-gray-100">
-              {plan.shoppingList.split("\n").filter(l => l.trim()).map((line, i) => {
-                if (line.startsWith("### ")) return (
-                  <p key={i} className="text-xs font-bold text-gray-600 mt-3 mb-1">{line.slice(4)}</p>
-                )
-                if (line.startsWith("- [ ] ") || line.startsWith("- ")) return (
-                  <p key={i} className="text-sm text-gray-700">• {line.replace(/^- \[.\] /, "").replace(/^- /, "")}</p>
-                )
-                return <p key={i} className="text-xs text-gray-400">{line}</p>
-              })}
+            <div className="px-4 pb-4 border-t border-gray-100">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                className="prose prose-sm max-w-none prose-headings:text-gray-700 prose-p:text-gray-700 prose-li:text-gray-700"
+              >
+                {plan.shoppingList}
+              </ReactMarkdown>
             </div>
           )}
         </div>
