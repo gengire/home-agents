@@ -1,164 +1,192 @@
 # Weekly Meal Plan
 **Status:** Active
-**Last generated:** May 2, 2026
-**For week of:** May 3–9, 2026
+**Last generated:** May 10, 2026
+**For week of:** May 11–17, 2026
 
 > This file is maintained by **HomeChef** and overwritten each time a new plan is generated.
 > Cooking history lives in `data/cook-log.md` — append-only, never overwritten.
 
 ---
 
+**Cook Log Insights:**
+- Only one week of history — full pattern analysis not yet possible. Insights are based on first-week data only.
+- IND-P was cooked 3 of 5 days last week (including eating out at Biryanni Hub) — rotating away; IND-P blocked until May 14 per 8-day rule.
+- Black Bean Enchilada Casserole (MEX) rated 3★, 90 min actual prep — MEX blocked this week per 8-day rule. Family added fresh toppings (yogurt, mango, avocado) showing strong engagement with the format.
+- Last week's proteins: chicken + red lentils + black beans. This week: chickpeas, eggplant, tilapia, yellow split peas, ground turkey — full ingredient rotation.
+- Ratings snapshot: Saag Chicken 4★ Yes (reliable leftover, reheats very well), Enchilada Casserole 3★ Yes.
+
 ## Categories Used This Week
 | Code | Meal | Day |
 |------|------|-----|
-| `IND-P` | Saag Chicken | Sunday |
-| `IND-L` | Red Lentil Dal | Sunday (batch) |
-| `FISH` | Lemon-Herb Baked Cod | Wednesday |
-| `MEX` | Black Bean & Sweet Potato Enchilada Casserole | Friday |
-| `DESS` | Mango Lassi Parfait | Sunday |
-| `DESS` | Berry Oat Parfait | Friday |
+| `IND-L` | Chana Masala | Sunday |
+| `IND-V` | Baingan Bharta | Sunday (batch) |
+| `FISH` | Berbere-Lime Baked Tilapia | Tuesday |
+| `ETH` | Kik Alicha | Tuesday (alongside tilapia) |
+| `ASIA` | Ginger-Sesame Ground Turkey and Bok Choy over Barley | Friday |
+| `DESS` | Cardamom Kheer | Sunday |
+| `DESS` | Cinnamon Banana Nice Cream | Friday |
 
-**Avoided:** None — this is the first logged week.
+**Avoided (used within last 8 days):** IND-P (last May 6), MEX (last May 8), ITA (last May 7)
 
 ---
 
 ## Prep Strategy
 
-**Sunday (today — shop + prep + cook):**
-Cook two full batch recipes. Both feed 4 for dinner twice with leftover lunch buffer.
-- Saag Chicken → Sunday dinner + Tuesday dinner + Mon/Tue lunches
-- Red Lentil Dal → Monday dinner + some of Wednesday + Mon/Tue lunches
-- Make Mango Lassi Parfait after dinner (5 min, no cooking)
-- Also cook a large pot of brown rice to use all week
+**Sunday (shop + batch cook):**
+Two plant-based Indian dishes with completely different ingredients from last week (chickpeas + eggplant vs. chicken + red lentils). Start eggplant under the broiler first — it runs longest.
+- Chana Masala → Sunday dinner + Monday dinner (12 servings)
+- Baingan Bharta → Sunday dinner side + Monday dinner side (10 servings)
+- Make Cardamom Kheer after dinner — slow simmer, largely hands-off
 
-**Wednesday quick cook (≤ 45 min):**
-Baked Cod with Roasted Vegetables & Quinoa. Wednesday + Thursday dinners.
+**Tuesday quick cook (~45 min total for both dishes):**
+Two dishes cooked simultaneously — the Ethiopian stew anchors Tuesday and Wednesday while the tilapia is fresh-only.
+- Kik Alicha (yellow split pea stew) → Tuesday dinner side + Wednesday dinner full (12 servings)
+- Berbere-Lime Tilapia → Tuesday dinner only — do NOT keep as leftover (fish does not reheat well)
 
-**Friday quick cook (≤ 45 min):**
-Black Bean & Sweet Potato Enchilada Casserole. Friday + Saturday dinners.
-Make Berry Oat Parfaits Friday evening — no cooking required.
+**Friday quick cook (≤ 50 min):**
+Ground turkey bok choy stir-fry over barley. Covers Friday + Saturday dinners.
+- Freeze bananas by Wednesday evening for Friday's Cinnamon Banana Nice Cream.
 
 ---
 
 ## Serving Math
 | Batch | Yield | Covers |
 |-------|-------|--------|
-| Saag Chicken | 10–12 servings | Sun dinner (4) + Tue dinner (4) + 2–4 lunches |
-| Red Lentil Dal | 12 servings | Mon dinner (4) + Wed dinner supplement (4) + 4 lunches |
-| Brown Rice | large pot | Sun, Mon, Tue, Wed |
-| Baked Tilapia | 10 servings | Wed dinner (4) + Thu dinner (4) + 2 lunches |
-| Enchilada Casserole | 10–12 servings | Fri dinner (4) + Sat dinner (4) + 2–4 lunches |
+| Chana Masala | 12 servings | Sun dinner (4) + Mon dinner (4) + seconds buffer (4) |
+| Baingan Bharta | 10 servings | Sun dinner side (4) + Mon dinner side (4) + seconds buffer (2) |
+| Berbere Tilapia | 8 servings | Tue dinner only (4 people × 2 each) — no leftovers planned |
+| Kik Alicha | 12 servings | Tue dinner side (4) + Wed dinner full (4) + seconds buffer (4) |
+| Turkey Bok Choy Stir-Fry | 10 servings | Fri dinner (4) + Sat dinner (4) + seconds buffer (2) |
 
 ---
 
 ## Pantry Draw-Down
 **Using from pantry this week:**
-- Brown rice (large batch Sunday)
-- Red lentils (for dal)
-- Canned black beans (for enchilada casserole)
-- Quinoa (for Wednesday cod)
-- Spices: cumin, coriander, turmeric, garam masala, chili powder
-- Garlic, onions
-- Nonfat Greek yogurt (for raita, lassi)
-- Soymilk or nonfat milk (for dal/raita)
-- Lemon/lime (from pantry staples)
-- Low-sodium broth
+- Tilapia fillets (frozen — priority use Tuesday)
+- Canned chickpeas (or dry) → Chana Masala
+- Lentils (dry) and yellow split peas → Kik Alicha
+- Barley → Friday stir-fry base
+- Brown rice → Sunday + Monday sides
+- Soymilk → Cardamom Kheer
+- Nonfat Greek yogurt → raita for Indian dinners + Banana Nice Cream
+- Full Indian spice collection → Sunday and Tuesday dishes
+- Garlic, onions → all recipes
+- Lemon/lime → Chana Masala, Kik Alicha, Tilapia
+- Low-sodium broth → all savory recipes
+- Chopped Tomatoes With Peppers & Chilli (pantry) → sub for roma tomatoes in Chana Masala (adds bonus heat)
 
-**Restock after this week:** Fresh garlic, onions, lemon/lime if depleted.
+**Need to buy:**
+- Eggplant, large (4–5) → Baingan Bharta
+- Lean ground turkey (2 lbs) → Friday stir-fry
+- Bok choy (4 heads) → Friday stir-fry
+- Carrots (4–5 large) → Friday stir-fry
+- Green onions (1 bunch) → Friday garnish
+- Lime (3) → Tilapia marinade
+- Fresh ginger (large knob) → multiple recipes
+- Ripe bananas (6–7, freeze by Wednesday night) → Friday dessert
+- Berbere spice blend (1 jar — see recipe for DIY blend)
+- Yellow split peas, dry (1 lb bag) → Kik Alicha, if not in pantry
+- Canned chickpeas, no-salt-added (4 × 15 oz cans)
+
+**Restock after this week:** Garlic, onions, low-sodium vegetable broth.
 
 ---
 
 ## The Week
 
-### Sunday, May 3 — 🍳 NEW COOK (Batch Day)
-**Dinner:** Saag Chicken | `IND-P` | ~60 min
-**Also cooking:** Red Lentil Dal with Brown Rice | `IND-L` | ~45 min
-**Dessert:** Mango Lassi Parfait | `DESS` | 5 min, no cook
-*Cook a large pot of brown rice while the dal and saag simmer — it serves all week.*
+### Sunday, May 11 — 🍳 NEW COOK (Batch Day)
+**Dinner:** Chana Masala + Brown Rice | `IND-L` | ~65 min
+**Also cooking:** Baingan Bharta | `IND-V` | ~85 min (start broiling eggplant first)
+**Dessert:** Cardamom Kheer | `DESS` | 45 min (largely hands-off)
+*Yield: Chana Masala 12 servings → Sunday dinner (4) + Monday dinner (4) + seconds buffer (4)*
+*Yield: Baingan Bharta 10 servings → Sunday dinner side (4) + Monday dinner side (4)*
 
-### Monday, May 4 — ♻️ LEFTOVERS
-**Dinner:** Red Lentil Dal + Brown Rice
-**Lunch:** Leftover Saag Chicken — serve over rice or as a wrap in a whole-wheat tortilla
+### Monday, May 12 — ♻️ LEFTOVERS
+**Dinner:** Leftover Chana Masala + Baingan Bharta + Brown Rice
+*Both dishes reheat excellently — flavors deepen overnight. Serve with nonfat yogurt raita.*
 
-### Tuesday, May 5 — ♻️ LEFTOVERS
-**Dinner:** Saag Chicken + Brown Rice
-**Lunch:** Leftover Dal — great as a grain bowl with a dollop of nonfat yogurt
+### Tuesday, May 13 — 🍳 NEW COOK
+**Dinner:** Berbere-Lime Baked Tilapia + Kik Alicha | `FISH` + `ETH` | Total: ~45 min
+*Tilapia yield: 8 servings — Tuesday dinner only. Do not save fish as leftover.*
+*Kik Alicha yield: 12 servings → Tuesday dinner side (4) + Wednesday dinner full (4) + buffer (4)*
 
-### Wednesday, May 6 — 🍳 NEW COOK
-**Dinner:** Lemon-Herb Baked Tilapia with Roasted Vegetables & Quinoa | `FISH` | Total: 40 min
-*Yield: 10 servings → Wed dinner (4) + Thu dinner (4) + 2 lunches*
+### Wednesday, May 14 — ♻️ LEFTOVERS
+**Dinner:** Leftover Kik Alicha + Brown Rice or Barley
+*Thin with a splash of broth when reheating — stew thickens significantly overnight in the fridge.*
 
-### Thursday, May 7 — ♻️ LEFTOVERS
-**Dinner:** Leftover Baked Tilapia + Quinoa
-**Lunch:** Tilapia and veg over mixed greens — no reheating needed, eat cold
+### Thursday, May 15 — 🍽️ POT LUCK / EAT OUT
+*No home cooking planned.*
 
-### Friday, May 8 — 🍳 NEW COOK
-**Dinner:** Black Bean & Sweet Potato Enchilada Casserole | `MEX` | Total: 45 min
-**Dessert:** Berry Oat Parfait | `DESS` | 5 min, no cook
-*Yield: 10–12 servings → Fri dinner (4) + Sat dinner (4) + 2–4 lunches*
+### Friday, May 16 — 🍳 NEW COOK
+**Dinner:** Ginger-Sesame Ground Turkey and Bok Choy over Barley | `ASIA` | Total: ~50 min
+**Dessert:** Cinnamon Banana Nice Cream | `DESS` | 5 min active (freeze bananas by Wednesday night)
+*Yield: 10 servings → Friday dinner (4) + Saturday dinner (4) + seconds buffer (2)*
 
-### Saturday, May 9 — ♻️ LEFTOVERS
-**Dinner:** Leftover Enchilada Casserole
-**Lunch:** Casserole leftovers — good cold or quickly microwaved
+### Saturday, May 17 — ♻️ LEFTOVERS
+**Dinner:** Leftover Ginger-Sesame Turkey Bok Choy over Barley
+*Store stir-fry and barley separately. Reheat stir-fry with 3 tbsp broth in a covered pan to restore moisture.*
 
 ---
 
 ## Desserts This Week
 | When | Name | Category | Notes |
 |------|------|----------|-------|
-| Sunday | Mango Lassi Parfait | DESS | Nonfat yogurt + frozen/fresh mango + cardamom. Make after dinner, serves 4. |
-| Friday | Berry Oat Parfait | DESS | Layer nonfat yogurt, mixed berries, oats toasted dry. No sugar added. |
+| Sunday | Cardamom Kheer | DESS | Soymilk rice pudding — make after dinner, serve warm or cold, lasts 5 days in fridge. |
+| Friday | Cinnamon Banana Nice Cream | DESS | Freeze bananas by Wednesday night. Blend just before serving — 5 min active. |
 
 ---
 
 ## Shopping List
 
-### Proteins
-- [ ] Boneless, skinless chicken breast or thighs (3 lbs — for saag)
-- [ ] Tilapia fillets (2 lbs / 4–5 fillets — for Wednesday)
-
 ### Produce
-- [ ] Baby spinach (2 large bags, ~10 oz each — for saag)
-- [ ] Tomatoes, roma or plum (6–8)
-- [ ] Bell peppers (4, mixed colors — for cod veg roast)
-- [ ] Zucchini (3 medium — for cod veg roast)
-- [ ] Sweet potatoes (3 large — for enchilada casserole)
-- [ ] Yellow onions (4 large)
-- [ ] Jalapeños (4)
-- [ ] Fresh ginger (1 large knob)
+- [ ] Eggplant, large (4–5)
+- [ ] Bok choy (4 heads)
+- [ ] Carrots (4–5 large)
+- [ ] Green onions (1 bunch)
+- [ ] Fresh ginger (large knob, ~6 oz)
+- [ ] Lime (3)
+- [ ] Ripe bananas (6–7, for freezing by Wednesday)
+- [ ] Jalapeños (4 — for Chana Masala and Baingan Bharta)
+- [ ] Tomatoes, roma (6 — for Baingan Bharta)
 - [ ] Fresh cilantro (2 bunches)
-- [ ] Lemon (4)
-- [ ] Lime (4)
-- [ ] Mango, fresh or frozen (2 fresh or 1 lb frozen — for lassi parfait)
-- [ ] Mixed berries, fresh or frozen (2 cups — for Friday parfait)
-- [ ] Cherry tomatoes (1 pint — for cod dish)
 
-### Dairy
-- [ ] Nonfat Greek yogurt (32 oz container — raita, lassi, parfaits)
+### Proteins
+- [ ] Lean ground turkey (2 lbs)
+
+### Pantry / Dry Goods
+- [ ] Yellow split peas, dry (1 lb bag — for Kik Alicha)
+- [ ] Pearl barley (1 bag — if not in pantry)
+- [ ] Berbere spice blend (1 jar — or buy: smoked paprika, cayenne, allspice, cinnamon, nutmeg)
+- [ ] Canned chickpeas, no-salt-added (4 × 15 oz cans)
+
+### Condiments & Sauce
+- [ ] Low-sodium soy sauce (if not stocked)
+- [ ] Rice vinegar (if not stocked)
+- [ ] Sesame seeds (small bag)
+- [ ] Sriracha (if not stocked)
+- [ ] Cornstarch (if not stocked)
+
+### Dairy / Alternatives
+- [ ] Soymilk, unsweetened (1 carton — need 6 cups for Cardamom Kheer)
+- [ ] Nonfat plain yogurt (large 32 oz container)
 
 ### Canned & Jarred
-- [ ] Canned black beans, no-salt-added (2 cans, 15 oz each)
-- [ ] Canned diced tomatoes, no-salt-added (3 cans, 14.5 oz each)
-- [ ] Red enchilada sauce, no-oil (1 can/jar — or make from scratch with pantry spices)
-- [ ] Low-sodium chicken broth (32 oz carton)
-- [ ] Low-sodium vegetable broth (32 oz carton)
-
-### Grains & Other
-- [ ] Whole-grain corn tortillas (1 pack — for enchilada casserole)
-- [ ] Rolled oats (if pantry is low — for parfait topping)
+- [ ] Low-sodium vegetable broth (2 × 32 oz cartons)
+- [ ] Low-sodium chicken broth (1 × 32 oz carton)
 
 ### Pantry Check Before Shopping
-*(Confirm you have these — listed as in-stock but verify amounts)*
-- [ ] Red lentils
 - [ ] Brown rice
-- [ ] Quinoa
-- [ ] Cumin, coriander, turmeric, garam masala, chili powder
-- [ ] Garlic (whole bulbs — buying fresh is fine, you'll use a lot)
-- [ ] Balsamic vinegar
+- [ ] Pearl barley (or buy above)
+- [ ] Cumin seeds, mustard seeds
+- [ ] Ground cumin, coriander, turmeric, garam masala, chili powder
+- [ ] Garlic (whole bulbs)
+- [ ] Raisins (1/4 cup for Kheer)
+- [ ] Honey or maple syrup (2 tbsp for Kheer)
 
 ---
 
 ## Suggested Pantry Updates After This Week
-- Note any spices running low after Sunday's cook session
-- Restock canned beans and diced tomatoes (used 2–3 cans this week)
-- Replenish nonfat Greek yogurt if the large container runs out mid-week
+- Replenish: garlic, onions, low-sodium vegetable broth
+- Add berbere spice blend to Herbs & Seasonings inventory if purchased
+- Add pearl barley to Whole Grains if not already stocked
+- Note yellow split peas as a new pantry staple — excellent for ETH rotation going forward
