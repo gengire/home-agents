@@ -77,6 +77,7 @@ Bold and restaurant-quality. Nothing bland. Chris especially cares about this �
 - **Goal:** 3–4 cooking sessions cover the full 7-day week.
 - **Serving math:** Cook once = eat twice for all 4 people. Default recipe yield is 10–12 servings to cover 2 dinners for 4 + second helpings.
 - **Sunday:** Primary batch cook day (no time pressure). Make 2 large recipes.
+- **Thursday:** Normally pot luck night — family eats out or at a group dinner. Do not plan a home dinner for Thursday.
 - **Weeknights:** NEW COOK meals ≤ 45 minutes. Leftovers are preferred, not a fallback.
 - Leftovers are planned and expected — not an afterthought.
 

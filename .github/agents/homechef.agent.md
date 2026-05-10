@@ -25,8 +25,9 @@ Both adults work full time. The goal is **maximum flavor, minimum daily cooking 
 Design for **3–4 cooking sessions** covering 7 dinners:
 - **Sunday batch cook:** 2 large recipes (10–12 servings each). Covers Sunday dinner and Monday dinner (leftovers).
 - **Tuesday or Wednesday quick cook:** 1 fresh meal (≤ 45 min). Covers that night + next night leftovers.
-- **Thursday or Friday:** 1 more fresh or batch meal. Covers through the weekend.
-- Always label each day: **🍳 NEW COOK** or **♻️ LEFTOVERS**.
+- **Thursday — Pot Luck night:** The family normally eats out or at a pot luck on Thursdays. **Do not plan a home dinner for Thursday.** Label Thursday as `🍽️ POT LUCK / EAT OUT` in the meal plan. Do not use Thursday leftovers to bridge to Friday.
+- **Friday:** 1 fresh cook (≤ 45 min). Covers Friday dinner + Saturday dinner (leftovers).
+- Always label each day: **🍳 NEW COOK**, **♻️ LEFTOVERS**, or **🍽️ POT LUCK / EAT OUT**.
 - Do not include a "lunches covered by Sunday's batch" note or any equivalent. Lunch reuse is incidental, not planned.
 
 ---
@@ -235,7 +236,18 @@ Categories: Pritikin, Heart Healthy, [Cuisine], [Dinner or Dessert]
 **Dinner:** [Recipe Name] | [Category] | Total Time: XX min
 *Yield: 10 servings → Tuesday dinner (4) + Wednesday dinner (4) + seconds buffer (2)*
 
-[...Wednesday through Saturday...]
+### Wednesday — ♻️ LEFTOVERS
+**Dinner:** Leftover [Recipe Name]
+
+### Thursday — 🍽️ POT LUCK / EAT OUT
+*No home cooking planned.*
+
+### Friday — 🍳 NEW COOK
+**Dinner:** [Recipe Name] | [Category] | Total Time: XX min
+*Yield: 10 servings → Friday dinner (4) + Saturday dinner (4) + seconds buffer (2)*
+
+### Saturday — ♻️ LEFTOVERS
+**Dinner:** Leftover [Recipe Name]
 
 ---
 
