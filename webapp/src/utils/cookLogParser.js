@@ -243,3 +243,122 @@ export function parseDeviations(str = '') {
   }
   return { prefs, subs }
 }
+
+// ── Quick Log ─────────────────────────────────────────────────────────────
+
+/**
+ * Parse the ## Quick Log section from cook-log.md.
+ * Returns array of { date, description, compliance, reason }
+ * compliance is one of: '✅ Fully compliant' | '🟡 Mostly' | '❌ Off plan'
+ */
+export function parseQuickLog(markdown) {
+  const lines = markdown.split('\n')
+  // Find the ## Quick Log section header
+  const sectionIdx = lines.findIndex(l => l.trim() === '## Quick Log')
+  if (sectionIdx === -1) return []
+
+  // Find the table header within that section
+  let headerIdx = -1
+  for (let i = sectionIdx + 1; i < lines.length; i++) {
+    if (lines[i].startsWith('|') && lines[i].includes('Date') && lines[i].includes('Description')) {
+      headerIdx = i
+      break
+    }
+    // Stop if we hit another section heading
+    if (lines[i].startsWith('## ') && i !== sectionIdx) break
+  }
+  if (headerIdx === -1) return []
+
+  const entries = []
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line.startsWith('|')) break
+    if (/^\|[-| ]+\|$/.test(line.trim())) continue // separator
+    if (line.includes('Date') && line.includes('Description')) continue // header
+
+    const cols = line
+      .split('|')
+      .map(c => c.trim())
+      .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1)
+
+    if (cols.length < 2) continue
+    const [date, description, compliance = '', reason = ''] = cols
+    if (!date || date === '—') continue
+    entries.push({ date, description, compliance, reason, isQuickLog: true })
+  }
+  return entries
+}
+
+/**
+ * Append a new row to the ## Quick Log table.
+ * Creates the section if it doesn't exist.
+ * Returns the updated markdown.
+ */
+export function appendQuickLogEntry(markdown, { date, description, compliance, reason = '' }) {
+  const newRow = `| ${date} | ${description} | ${compliance} | ${reason} |`
+  const lines = markdown.split('\n')
+
+  // Find existing section
+  const sectionIdx = lines.findIndex(l => l.trim() === '## Quick Log')
+  if (sectionIdx === -1) {
+    // Append the whole section at the end
+    const section = [
+      '',
+      '---',
+      '',
+      '## Quick Log',
+      '',
+      '| Date | Description | Compliance | Reason |',
+      '|------|-------------|------------|--------|',
+      newRow,
+    ]
+    return lines.join('\n') + '\n' + section.join('\n') + '\n'
+  }
+
+  // Find the table header in the existing section
+  let headerIdx = -1
+  for (let i = sectionIdx + 1; i < lines.length; i++) {
+    if (lines[i].startsWith('|') && lines[i].includes('Date') && lines[i].includes('Description')) {
+      headerIdx = i
+      break
+    }
+    if (lines[i].startsWith('## ') && i !== sectionIdx) break
+  }
+
+  if (headerIdx === -1) {
+    // Section exists but no table yet — insert after the section heading
+    lines.splice(sectionIdx + 1, 0, '', '| Date | Description | Compliance | Reason |', '|------|-------------|------------|--------|', newRow)
+    return lines.join('\n')
+  }
+
+  // Find the last data row in the quick log table
+  let lastDataLine = -1
+  let i = headerIdx + 1
+  while (i < lines.length && lines[i].startsWith('|')) {
+    if (!/^\|[-| ]+\|$/.test(lines[i].trim()) && !(lines[i].includes('Date') && lines[i].includes('Description'))) {
+      lastDataLine = i
+    }
+    i++
+  }
+
+  if (lastDataLine === -1) {
+    // No data rows yet — insert after separator
+    lines.splice(headerIdx + 2, 0, newRow)
+  } else {
+    lines.splice(lastDataLine + 1, 0, newRow)
+  }
+
+  return lines.join('\n')
+}
+
+/**
+ * Map a quick log compliance string to a numeric pass count (out of 4).
+ * Used by HealthTrends to factor quick logs into compliance charts.
+ */
+export function quickLogCompliancePass(compliance) {
+  if (!compliance) return null
+  if (compliance.includes('Fully compliant')) return 4
+  if (compliance.includes('Mostly')) return 2
+  if (compliance.includes('Off plan')) return 0
+  return null
+}
