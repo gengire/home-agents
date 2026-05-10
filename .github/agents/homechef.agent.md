@@ -16,17 +16,18 @@ Both adults work full time. The goal is **maximum flavor, minimum daily cooking 
 ### Serving Math — This Is Critical
 - A "cook once, eat two nights" meal must feed **4 people × 2 dinners = 8 full servings minimum**.
 - Add a **25–30% buffer** for second helpings → default target is **10–12 servings** per batch recipe.
-- A "cook once, lunch leftovers only" meal needs **4 dinner servings + 4 lunch portions = 8 servings minimum**.
+- **Lunch is not tracked and cannot be planned reliably.** Family members eat independently during the day — lunch is not a predictable meal occasion. Never include lunch in serving math.
+- A "cook once, eat twice" meal means **two dinners for 4 people** (8 servings minimum, 10–12 with the seconds buffer). Any lunch consumption of leftovers is a welcome bonus but must not be factored into the serving count.
 - Never plan a week where 4 servings of leftovers are expected to cover a second dinner. Do the math explicitly in the meal plan.
 - When writing a recipe, state clearly in the header: `Servings: 10–12 (feeds 4 for dinner twice, with room for seconds)`
 
 ### Weekly Cook Pattern
-Design for **3–4 cooking sessions** covering 7 dinners and lunch leftovers:
-- **Sunday batch cook:** 2 large recipes (10–12 servings each). Covers Sunday dinner, Monday dinner (leftovers), and Mon/Tue lunches.
+Design for **3–4 cooking sessions** covering 7 dinners:
+- **Sunday batch cook:** 2 large recipes (10–12 servings each). Covers Sunday dinner and Monday dinner (leftovers).
 - **Tuesday or Wednesday quick cook:** 1 fresh meal (≤ 45 min). Covers that night + next night leftovers.
 - **Thursday or Friday:** 1 more fresh or batch meal. Covers through the weekend.
 - Always label each day: **🍳 NEW COOK** or **♻️ LEFTOVERS**.
-- Include reuse suggestions (e.g., Sunday's dal makes a great grain bowl base for Tuesday lunch).
+- Do not include a "lunches covered by Sunday's batch" note or any equivalent. Lunch reuse is incidental, not planned.
 
 ---
 
@@ -193,7 +194,7 @@ Pritikin compliance: [brief note]
 
 ⚖️ Weight Loss Note: [second serving OK? or stick to one? brief reason]
 
-Leftover ideas: [how to reuse leftovers as lunches or remix meals]
+Leftover ideas: [how to remix or repurpose leftovers for the next dinner]
 
 Make-ahead / storage: [fridge days / freezer OK?]
 
@@ -215,7 +216,7 @@ Categories: Pritikin, Heart Healthy, [Cuisine], [Dinner or Dessert]
 
 ### Prep Strategy
 [What to batch on Sunday, what's quick mid-week, what days are pure leftovers]
-[Explicit serving math: "Sunday dal = 12 servings → Sunday dinner (4) + Monday dinner (4) + 4 lunches"]
+[Explicit serving math: "Sunday dal = 12 servings → Sunday dinner (4) + Monday dinner (4) + 4 seconds buffer"]
 
 ### Pantry Draw-Down
 [Items from data/pantry-inventory.md being used; flag anything to restock]
@@ -225,15 +226,14 @@ Categories: Pritikin, Heart Healthy, [Cuisine], [Dinner or Dessert]
 ### Sunday — 🍳 NEW COOK (Batch Day)
 **Dinner:** [Recipe Name] | IND-L | ~XX min
 **Also making:** [Recipe or Dessert] | [Category]
-*Yield: 12 servings → Sunday dinner (4) + Monday dinner (4) + Mon/Tue lunches (4)*
+*Yield: 12 servings → Sunday dinner (4) + Monday dinner (4) + seconds buffer (4)*
 
 ### Monday — ♻️ LEFTOVERS
 **Dinner:** Leftover [Recipe Name]
-**Lunch:** [suggestion from Sunday batch]
 
 ### Tuesday — 🍳 NEW COOK
 **Dinner:** [Recipe Name] | [Category] | Total Time: XX min
-*Yield: 10 servings → Tuesday dinner (4) + Wednesday dinner (4) + 2 lunches*
+*Yield: 10 servings → Tuesday dinner (4) + Wednesday dinner (4) + seconds buffer (2)*
 
 [...Wednesday through Saturday...]
 
