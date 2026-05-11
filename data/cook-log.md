@@ -22,6 +22,7 @@ HomeChef will append rows in the format below.
 | 2026-05-06 | Biryanni Hub | IND-P | Ate Out — Sooo Good.  I had the Biryanni Fish. | 5 |  |  |  |
 | 2026-05-07 | Pot Luck D&D | ITA | Ate Out — Rotini casserole |  |  |  |  |
 | 2026-05-08 | Black Bean and Sweet Potato Enchilada Casserole | MEX |  | 3 | Yes | 90 | PREF: Used the full can (20 oz) of enchillada sauce; PREF: Added Greek yogurt topping; PREF: Added fresh mango; PREF: Added fresh avocado slices topping |
+| 2026-05-11 | Lemon Herb Baked Tilapia with Roasted Vegetables and Quinoa | FISH |  | | | 90 | |
 
 ---
 
